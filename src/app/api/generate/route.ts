@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai"
 import { NextResponse } from "next/server"
 
-const MODEL_ID = "gemma-4-26b-a4b-it"
+const MODEL_ID = "gemini-2.5-flash"
 
 const SYSTEM_PROMPT =
   `You are Rolevia, an AI job description writer for HR teams in the MENA region. ` +
