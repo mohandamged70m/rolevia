@@ -23,12 +23,13 @@ export async function getMonthlyUsage(userId: string): Promise<{ used: number; l
   if (supabase) {
     try {
       const monthYear = getCurrentMonth()
-      const { count } = await supabase
+      const { data } = await supabase
         .from("generations")
-        .select("*", { count: "exact", head: true })
+        .select("count")
         .eq("user_id", userId)
         .eq("month_year", monthYear)
-      return { used: count ?? 0, limit: MONTHLY_LIMIT }
+        .maybeSingle()
+      return { used: data?.count ?? 0, limit: MONTHLY_LIMIT }
     } catch (err) {
       console.error("Supabase usage fetch failed, using file fallback:", err)
     }
@@ -52,17 +53,28 @@ export async function incrementMonthlyUsage(userId: string): Promise<number> {
 
   if (supabase) {
     try {
-      const { error } = await supabase
+      const { data: existing } = await supabase
         .from("generations")
-        .insert({ user_id: userId, month_year: monthYear, count: 1 })
-      if (error) console.error("Failed to insert generation:", error)
-
-      const { count } = await supabase
-        .from("generations")
-        .select("*", { count: "exact", head: true })
+        .select("id, count")
         .eq("user_id", userId)
         .eq("month_year", monthYear)
-      return count ?? 0
+        .maybeSingle()
+
+      if (existing) {
+        const newCount = (existing.count ?? 0) + 1
+        const { error } = await supabase
+          .from("generations")
+          .update({ count: newCount })
+          .eq("id", existing.id)
+        if (error) throw error
+        return newCount
+      } else {
+        const { error } = await supabase
+          .from("generations")
+          .insert({ user_id: userId, month_year: monthYear, count: 1 })
+        if (error) throw error
+        return 1
+      }
     } catch (err) {
       console.error("Supabase usage increment failed, using file fallback:", err)
     }
