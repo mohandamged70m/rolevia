@@ -113,11 +113,10 @@ export async function POST(request: Request) {
     const response = await ai.models.generateContent({
       model: MODEL_ID,
       config: {
-        systemInstruction: buildSystemPrompt(lang),
         temperature: 0.7,
         maxOutputTokens: 4096,
       },
-      contents: buildContentPrompt(role, lang),
+      contents: buildSystemPrompt(lang) + "\n\n" + buildContentPrompt(role, lang),
     })
 
     const text = response.text
