@@ -1,6 +1,6 @@
 import Navbar from "@/components/landing/Navbar"
 import Hero from "@/components/landing/Hero"
-import LogoStrip from "@/components/landing/LogoStrip"
+
 import ProductTabs from "@/components/landing/ProductTabs"
 import Features from "@/components/landing/Features"
 import Stats from "@/components/landing/Stats"
@@ -16,7 +16,6 @@ export default function Home() {
       <Navbar />
       <main className="flex-1">
         <Hero />
-        <LogoStrip />
         <ProductTabs />
         <Features />
         <Stats />
