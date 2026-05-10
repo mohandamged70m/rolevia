@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai"
 import { NextResponse } from "next/server"
 import { getIp, getUsage, incrementUsage, GENERATION_LIMIT } from "@/lib/usage-store"
 
-const MODEL_ID = "gemini-2.5-flash"
+const MODEL_ID = "gemini-1.5-flash"
 
 type Language = "arabic" | "english" | "both"
 
@@ -133,8 +133,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ content: text, remaining })
   } catch (error) {
     console.error("Generation error:", error)
+    const msg = error instanceof Error ? error.message : "Generation failed"
+    const isQuota = msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED")
+    if (isQuota) {
+      return NextResponse.json(
+        { error: "Daily API limit reached. Please try again tomorrow or upgrade your plan.", retryAfter: "24h" },
+        { status: 429 },
+      )
+    }
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Generation failed" },
+      { error: msg },
       { status: 500 },
     )
   }
