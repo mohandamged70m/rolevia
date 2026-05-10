@@ -19,7 +19,7 @@ export default function CtaSection() {
         </p>
         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            href="#"
+            href="/sign-up"
             className="inline-flex items-center rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-[#3D2BFF] shadow-lg transition-all hover:scale-[1.02] hover:bg-white/90"
           >
             Start writing for free

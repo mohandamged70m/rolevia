@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 
 const PLANS = [
@@ -16,7 +18,7 @@ const PLANS = [
       "Community support",
     ],
     cta: "Start free",
-    href: "#",
+    href: "/sign-up",
   },
   {
     name: "Growth",
@@ -35,7 +37,7 @@ const PLANS = [
       "Team collaboration",
     ],
     cta: "Start 14-day trial",
-    href: "#",
+    href: "/sign-up",
   },
   {
     name: "Enterprise",
@@ -54,7 +56,7 @@ const PLANS = [
       "On-premise option",
     ],
     cta: "Contact sales",
-    href: "#",
+    href: "mailto:sales@rolevia.ai",
   },
 ]
 

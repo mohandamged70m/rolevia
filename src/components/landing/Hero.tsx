@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, type ReactElement } from "react"
+import Link from "next/link"
 import { Loader2, CheckCircle, X } from "lucide-react"
 
 const TAGS = [
@@ -108,14 +109,14 @@ export default function Hero() {
         </p>
 
         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <a
-            href="#"
+          <Link
+            href="/sign-up"
             className="inline-flex items-center rounded-xl bg-[#3D2BFF] px-8 py-3.5 text-base font-medium text-white shadow-lg shadow-[#3D2BFF]/25 transition-all hover:scale-[1.02] hover:bg-[#3525E0]"
           >
             Try for free &mdash; no credit card
-          </a>
+          </Link>
           <a
-            href="#"
+            href="#app-preview"
             className="inline-flex items-center rounded-xl border-2 border-[#3D2BFF]/20 px-8 py-3.5 text-base font-medium text-[#3D2BFF] transition-all hover:scale-[1.02] hover:border-[#3D2BFF]/40 hover:bg-[#F8F7FF]"
           >
             See a live demo &rarr;
@@ -124,7 +125,7 @@ export default function Hero() {
       </div>
 
       {/* Browser mockup card */}
-      <div className="relative mx-auto mt-16 max-w-4xl overflow-hidden rounded-t-2xl border border-[#EAE8FF] bg-white shadow-2xl shadow-[#3D2BFF]/5">
+      <div id="app-preview" className="relative mx-auto mt-16 max-w-4xl overflow-hidden rounded-t-2xl border border-[#EAE8FF] bg-white shadow-2xl shadow-[#3D2BFF]/5">
         {/* Top bar */}
         <div className="flex items-center gap-3 border-b border-[#EAE8FF] bg-[#F8F7FF] px-4 py-3">
           <div className="flex gap-1.5">
