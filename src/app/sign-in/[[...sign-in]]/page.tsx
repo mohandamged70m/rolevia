@@ -1,6 +1,12 @@
+import { redirect } from "next/navigation"
 import { SignIn } from "@clerk/nextjs"
+import { isClerkConfigured } from "@/lib/clerk"
 
 export default function SignInPage() {
+  if (!isClerkConfigured) {
+    redirect("/")
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#F0EEFF] via-[#F0EEFF]/50 to-white px-4">
       <div className="w-full max-w-md">

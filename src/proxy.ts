@@ -1,6 +1,16 @@
 import { clerkMiddleware } from "@clerk/nextjs/server"
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
-export default clerkMiddleware()
+const isClerkConfigured =
+  !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+  !!process.env.CLERK_SECRET_KEY
+
+const handler = isClerkConfigured
+  ? clerkMiddleware()
+  : (_req: NextRequest) => NextResponse.next()
+
+export default handler
 
 export const config = {
   matcher: [

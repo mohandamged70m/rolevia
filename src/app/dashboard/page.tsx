@@ -1,8 +1,13 @@
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import Link from "next/link"
+import { isClerkConfigured } from "@/lib/clerk"
 
 export default async function DashboardPage() {
+  if (!isClerkConfigured) {
+    redirect("/")
+  }
+
   const user = await currentUser()
 
   if (!user) {
