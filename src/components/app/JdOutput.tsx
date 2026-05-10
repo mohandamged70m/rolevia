@@ -13,6 +13,16 @@ interface JdOutputProps {
   isRegenerating?: boolean
 }
 
+function splitBilingual(text: string): { english: string; arabic: string } {
+  const engMatch = text.match(/🇬🇧\s*ENGLISH VERSION\n([\s\S]*?)(?=\n---|\n🇸🇦|$)/)
+  const araMatch = text.match(/🇸🇦\s*ARABIC VERSION\n([\s\S]*?)(?=\n---|$)/)
+
+  const english = engMatch ? engMatch[1].trim() : text
+  const arabic = araMatch ? araMatch[1].trim() : text
+
+  return { english, arabic }
+}
+
 function extractSections(text: string) {
   const lines = text.split("\n")
   const sections: { heading: string; body: string[] }[] = []
@@ -21,7 +31,12 @@ function extractSections(text: string) {
   for (const line of lines) {
     const trimmed = line.trim()
     if (!trimmed) continue
-    if (/^#{1,3}\s/.test(trimmed) || /^\*\*[^*]+\*\*/.test(trimmed) || /^[A-Z][a-z]+ [A-Z]/.test(trimmed) || /^[A-Z][A-Z\s]+$/.test(trimmed)) {
+    const isHeading =
+      /^#{1,3}\s/.test(trimmed) ||
+      /^\*\*[^*]+\*\*/.test(trimmed) ||
+      /^[A-Z][a-z]+ [A-Z]/.test(trimmed) ||
+      /^[A-Z][A-Z\s]+$/.test(trimmed)
+    if (isHeading) {
       current = { heading: trimmed.replace(/^#+\s*|\*\*/g, ""), body: [] }
       sections.push(current)
     } else if (current) {
@@ -32,41 +47,21 @@ function extractSections(text: string) {
   return sections.length > 0 ? sections : [{ heading: "", body: lines.filter((l) => l.trim()) }]
 }
 
-export function JdOutput({
-  title,
-  content,
-  language = "both",
-  onRegenerate,
-  onSave,
-  isSaving,
-  isRegenerating,
-}: JdOutputProps) {
-  const isRtl = language === "arabic"
+function OutputPanel({ content, rtl }: { content: string; rtl: boolean }) {
   const sections = extractSections(content)
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        {title && (
-          <h2 className="font-heading text-base font-semibold text-[#111827]">{title}</h2>
-        )}
-        <JdActions
-          content={content}
-          onRegenerate={onRegenerate}
-          onSave={onSave}
-          isSaving={isSaving}
-          isRegenerating={isRegenerating}
-        />
-      </div>
-
-      <div
-        className={cn(
-          "rounded-xl border border-[#EAE8FF] bg-white p-5 text-sm leading-relaxed",
-          isRtl && "text-right",
-        )}
-        dir={isRtl ? "rtl" : "ltr"}
-      >
-        {sections.map((section, i) => (
+    <div
+      className={cn(
+        "space-y-4 rounded-xl border border-[#EAE8FF] bg-white p-5 text-sm leading-relaxed",
+        rtl && "text-right",
+      )}
+      dir={rtl ? "rtl" : "ltr"}
+    >
+      {sections.length === 0 ? (
+        <p className="text-[#9ca3af]">No content</p>
+      ) : (
+        sections.map((section, i) => (
           <div key={i} className="mb-4 last:mb-0">
             {section.heading && (
               <h3 className="mb-2 font-heading text-sm font-semibold text-[#3D2BFF]">
@@ -84,8 +79,83 @@ export function JdOutput({
               )
             })}
           </div>
-        ))}
+        ))
+      )}
+    </div>
+  )
+}
+
+export function JdOutput({
+  title,
+  content,
+  language = "both",
+  onRegenerate,
+  onSave,
+  isSaving,
+  isRegenerating,
+}: JdOutputProps) {
+  if (language === "both") {
+    const { english, arabic } = splitBilingual(content)
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          {title && (
+            <h2 className="font-heading text-base font-semibold text-[#111827]">{title}</h2>
+          )}
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-[#F0EEFF] px-2 py-0.5 text-[10px] font-medium text-[#3D2BFF]">
+              AR / EN
+            </span>
+          </div>
+          <JdActions
+            content={content}
+            onRegenerate={onRegenerate}
+            onSave={onSave}
+            isSaving={isSaving}
+            isRegenerating={isRegenerating}
+          />
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+              English
+            </p>
+            <OutputPanel content={english} rtl={false} />
+          </div>
+          <div>
+            <p className="mb-2 text-right text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+              العربية
+            </p>
+            <OutputPanel content={arabic} rtl={true} />
+          </div>
+        </div>
       </div>
+    )
+  }
+
+  const isRtl = language === "arabic"
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        {title && (
+          <h2 className="font-heading text-base font-semibold text-[#111827]">{title}</h2>
+        )}
+        <span className="rounded-full bg-[#F0EEFF] px-2 py-0.5 text-[10px] font-medium text-[#3D2BFF]">
+          {language === "arabic" ? "AR" : "EN"}
+        </span>
+        <JdActions
+          content={content}
+          onRegenerate={onRegenerate}
+          onSave={onSave}
+          isSaving={isSaving}
+          isRegenerating={isRegenerating}
+        />
+      </div>
+
+      <OutputPanel content={content} rtl={isRtl} />
     </div>
   )
 }
