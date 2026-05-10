@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect, type ReactElement } from "react"
+import { useState, useEffect, type ReactElement, useCallback } from "react"
 import Link from "next/link"
-import { Loader2, CheckCircle, X } from "lucide-react"
+import { Loader2, CheckCircle, X, Sparkles } from "lucide-react"
+import { findDemoRole, SAMPLE_JDS, DEMO_ROLES } from "./hero-demo-data"
 
 const TAGS = [
   "Professional",
@@ -24,6 +25,13 @@ const LANGUAGE_OPTIONS: { value: Language; label: string }[] = [
   { value: "both", label: "Both" },
 ]
 
+function generateSampleContent(role: string, language: Language): string {
+  const key = findDemoRole(role)
+  const sample = key ? SAMPLE_JDS[key] : null
+  if (!sample) return SAMPLE_JDS["product-manager"]
+  return sample
+}
+
 export default function Hero() {
   const [role, setRole] = useState("Senior Product Manager")
   const [language, setLanguage] = useState<Language>("both")
@@ -33,6 +41,7 @@ export default function Hero() {
   const [copied, setCopied] = useState(false)
   const [generationsRemaining, setGenerationsRemaining] = useState<number | null>(null)
   const [showBookingPopup, setShowBookingPopup] = useState(false)
+  const [isDemoMode, setIsDemoMode] = useState(false)
 
   useEffect(() => {
     fetch("/api/generate")
@@ -41,7 +50,7 @@ export default function Hero() {
       .catch(() => setGenerationsRemaining(GENERATION_LIMIT))
   }, [])
 
-  async function handleGenerate() {
+  const handleGenerate = useCallback(async () => {
     if (!role.trim()) return
     setLoading(true)
     setError(null)
@@ -62,16 +71,21 @@ export default function Hero() {
       if (!res.ok) throw new Error(data.error || "Generation failed")
 
       setGeneratedContent(data.content)
+      setIsDemoMode(false)
 
       if (data.remaining <= 0) {
         setShowBookingPopup(true)
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong")
+    } catch {
+      await new Promise((r) => setTimeout(r, 600))
+      const content = generateSampleContent(role, language)
+      setGeneratedContent(content)
+      setIsDemoMode(true)
+      setError(null)
     } finally {
       setLoading(false)
     }
-  }
+  }, [role, language])
 
   function handleCopy() {
     if (!generatedContent) return
@@ -183,6 +197,24 @@ export default function Hero() {
             ))}
           </div>
 
+          {/* Quick role selectors */}
+          {!generatedContent && (
+            <div className="mb-5">
+              <p className="mb-2 text-xs font-medium text-[#6b7280]">Try a role:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {DEMO_ROLES.map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => { setRole(r); setTimeout(handleGenerate, 50) }}
+                    className="rounded-full border border-[#3D2BFF]/20 bg-[#F8F7FF] px-3 py-1 text-xs font-medium text-[#3D2BFF] transition-all hover:border-[#3D2BFF]/40 hover:bg-white"
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Remaining count */}
           {generationsRemaining !== null && (
             <div className="mb-3 flex items-center justify-between text-xs text-[#6b7280]">
@@ -214,19 +246,31 @@ export default function Hero() {
             )}
 
             {!loading && !generatedContent && !error && (
-              <div className="space-y-3">
-                <div className="h-4 w-3/4 rounded bg-[#EAE8FF]/50" />
-                <div className="h-4 w-full rounded bg-[#EAE8FF]/50" />
-                <div className="h-4 w-5/6 rounded bg-[#EAE8FF]/50" />
-                <div className="h-4 w-2/3 rounded bg-[#EAE8FF]/50" />
-                <div className="h-4 w-full rounded bg-[#EAE8FF]/50" />
-                <div className="h-4 w-4/5 rounded bg-[#EAE8FF]/50" />
-                <div className="h-4 w-1/2 rounded bg-[#EAE8FF]/50" />
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="mb-3 rounded-full bg-[#3D2BFF]/5 p-3">
+                  <Sparkles className="h-6 w-6 text-[#3D2BFF]" />
+                </div>
+                <p className="text-sm font-medium text-[#4b5563]">
+                  Enter a role and click Generate
+                </p>
+                <p className="mt-1 text-xs text-[#9ca3af]">
+                  Or pick one of the sample roles above
+                </p>
               </div>
             )}
 
             {!loading && generatedContent && (
-              <JdOutput content={generatedContent} />
+              <div>
+                {isDemoMode && (
+                  <div className="mb-3 flex items-center gap-2 rounded-lg border border-[#FFBD2E]/30 bg-[#FFBD2E]/5 px-3 py-2">
+                    <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#B8860B]" />
+                    <span className="text-xs font-medium text-[#B8860B]">
+                      Demo mode &mdash; showing sample content
+                    </span>
+                  </div>
+                )}
+                <JdOutput content={generatedContent} />
+              </div>
             )}
 
             {!loading && error && (
