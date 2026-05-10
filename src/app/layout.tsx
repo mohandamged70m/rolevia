@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Syne, DM_Sans } from "next/font/google";
-import ClerkProviderWrapper from "@/components/ClerkProviderWrapper";
 import "./globals.css";
 
 const syne = Syne({
@@ -27,13 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProviderWrapper>
-      <html
-        lang="en"
-        className={`${syne.variable} ${dmSans.variable} h-full antialiased`}
-      >
-        <body className="min-h-full flex flex-col">{children}</body>
-      </html>
-    </ClerkProviderWrapper>
+    <html
+      lang="en"
+      className={`${syne.variable} ${dmSans.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col">{children}</body>
+    </html>
   );
 }

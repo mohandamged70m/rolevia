@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Menu, X } from "lucide-react"
-import { useUser, UserButton } from "@clerk/nextjs"
+import { DesktopAuthButtons, MobileAuthButtons } from "@/components/SafeUserButton"
 
 const NAV_ITEMS = [
   { label: "Features", href: "#features" },
@@ -14,7 +14,6 @@ const NAV_ITEMS = [
 ]
 
 export default function Navbar() {
-  const { isSignedIn } = useUser()
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -54,38 +53,7 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-4 md:flex">
-          {isSignedIn ? (
-            <>
-              <Link
-                href="/dashboard"
-                className="text-sm font-medium text-[#4b5563] transition-colors hover:text-[#3D2BFF]"
-              >
-                Dashboard
-              </Link>
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: "h-8 w-8",
-                  },
-                }}
-              />
-            </>
-          ) : (
-            <>
-              <Link
-                href="/sign-in"
-                className="rounded-lg px-4 py-2 text-sm font-medium text-[#4b5563] transition-colors hover:text-[#3D2BFF]"
-              >
-                Log in
-              </Link>
-              <Link
-                href="/sign-up"
-                className="rounded-lg bg-[#3D2BFF] px-5 py-2 text-sm font-medium text-white transition-all hover:scale-[1.02] hover:bg-[#3525E0]"
-              >
-                Start free &rarr;
-              </Link>
-            </>
-          )}
+          <DesktopAuthButtons />
         </div>
 
         <button
@@ -111,43 +79,7 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="mt-4 flex flex-col gap-3">
-              {isSignedIn ? (
-                <>
-                  <Link
-                    href="/dashboard"
-                    className="rounded-lg px-4 py-2 text-center text-sm font-medium text-[#4b5563] transition-colors hover:text-[#3D2BFF]"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <div className="flex justify-center">
-                    <UserButton
-                      appearance={{
-                        elements: {
-                          avatarBox: "h-8 w-8",
-                        },
-                      }}
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/sign-in"
-                    className="rounded-lg px-4 py-2 text-center text-sm font-medium text-[#4b5563] transition-colors hover:text-[#3D2BFF]"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Log in
-                  </Link>
-                  <Link
-                    href="/sign-up"
-                    className="rounded-lg bg-[#3D2BFF] px-5 py-2 text-center text-sm font-medium text-white transition-all hover:bg-[#3525E0]"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Start free &rarr;
-                  </Link>
-                </>
-              )}
+              <MobileAuthButtons onClick={() => setMobileOpen(false)} />
             </div>
           </nav>
         </div>
