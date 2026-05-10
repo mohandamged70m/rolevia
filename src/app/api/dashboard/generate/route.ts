@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 import { currentUser } from "@clerk/nextjs/server"
 import { getMonthlyUsage, incrementMonthlyUsage, MONTHLY_LIMIT } from "@/lib/user-usage"
 
-const MODEL_ID = "gemini-1.5-flash"
+const MODEL_ID = "gemma-4-31b-it"
 
 type Language = "arabic" | "english" | "both"
 

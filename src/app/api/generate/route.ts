@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai"
 import { NextResponse } from "next/server"
 import { getIp, getUsage, incrementUsage, GENERATION_LIMIT } from "@/lib/usage-store"
 
-const MODEL_ID = "gemini-1.5-flash"
+const MODEL_ID = "gemma-4-31b-it"
 
 type Language = "arabic" | "english" | "both"
 
