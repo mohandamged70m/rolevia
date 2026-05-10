@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, type ReactElement } from "react"
 import { Loader2, CheckCircle, X } from "lucide-react"
 
 const TAGS = [
@@ -247,46 +247,7 @@ export default function Hero() {
             )}
 
             {!loading && generatedContent && (
-              <div className="prose prose-sm max-w-none text-[#111827]">
-                {generatedContent.split("\n").map((line, i) => {
-                  if (line.startsWith("# ")) {
-                    return (
-                      <h1 key={i} className="mb-4 text-xl font-bold text-[#111827]">
-                        {line.replace(/^# /, "")}
-                      </h1>
-                    )
-                  }
-                  if (line.startsWith("## ")) {
-                    return (
-                      <h2 key={i} className="mb-3 mt-5 text-base font-semibold text-[#3D2BFF]">
-                        {line.replace(/^## /, "")}
-                      </h2>
-                    )
-                  }
-                  if (line.startsWith("### ")) {
-                    return (
-                      <h3 key={i} className="mb-2 mt-4 text-sm font-semibold text-[#111827]">
-                        {line.replace(/^### /, "")}
-                      </h3>
-                    )
-                  }
-                  if (line.startsWith("- ")) {
-                    return (
-                      <li key={i} className="ml-4 list-disc text-sm leading-relaxed text-[#4b5563]">
-                        {line.replace(/^- /, "")}
-                      </li>
-                    )
-                  }
-                  if (line.trim() === "") {
-                    return <div key={i} className="h-2" />
-                  }
-                  return (
-                    <p key={i} className="text-sm leading-relaxed text-[#4b5563]">
-                      {line}
-                    </p>
-                  )
-                })}
-              </div>
+              <JdOutput content={generatedContent} />
             )}
 
             {!loading && error && (
@@ -356,6 +317,201 @@ export default function Hero() {
       )}
     </section>
   )
+}
+
+function JdOutput({ content }: { content: string }) {
+  const [activeLang, setActiveLang] = useState<"english" | "arabic">("english")
+
+  const langRegex = /(?:🇬🇧|🇸🇦)\s*(ENGLISH|ARABIC)\s*VERSION/gi
+  const isBilingual = langRegex.test(content)
+
+  const englishContent = extractLang(content, "english")
+  const arabicContent = extractLang(content, "arabic")
+
+  const displayContent = isBilingual
+    ? activeLang === "english"
+      ? englishContent
+      : arabicContent
+    : content
+
+  return (
+    <div>
+      {isBilingual && (
+        <div className="mb-4 flex gap-1 rounded-xl border border-[#EAE8FF] bg-[#F8F7FF] p-1">
+          <button
+            onClick={() => setActiveLang("english")}
+            className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+              activeLang === "english"
+                ? "bg-white text-[#3D2BFF] shadow-sm"
+                : "text-[#6b7280] hover:text-[#111827]"
+            }`}
+          >
+            🇬🇧 English
+          </button>
+          <button
+            onClick={() => setActiveLang("arabic")}
+            className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+              activeLang === "arabic"
+                ? "bg-white text-[#3D2BFF] shadow-sm"
+                : "text-[#6b7280] hover:text-[#111827]"
+            }`}
+          >
+            🇸🇦 العربية
+          </button>
+        </div>
+      )}
+
+      <div
+        className="space-y-5"
+        dir={activeLang === "arabic" ? "rtl" : "ltr"}
+      >
+        {renderSections(displayContent, activeLang === "arabic")}
+      </div>
+    </div>
+  )
+}
+
+function extractLang(content: string, lang: "english" | "arabic"): string {
+  const parts = content.split(/(?:^|\n)---\s*(?:\n|$)/)
+  const flag = lang === "english" ? "🇬🇧" : "🇸🇦"
+  const label = lang === "english" ? "ENGLISH VERSION" : "ARABIC VERSION"
+
+  for (const part of parts) {
+    if (part.includes(flag) && part.includes(label)) {
+      return part.replace(/🇬🇧|🇸🇦\s*(ENGLISH|ARABIC)\s*VERSION/gi, "").trim()
+    }
+  }
+  return content
+}
+
+function renderSections(text: string, isRtl: boolean) {
+  const lines = text.split("\n")
+  const elements: ReactElement[] = []
+  let i = 0
+
+  while (i < lines.length) {
+    const line = lines[i]
+
+    if (line.startsWith("## ")) {
+      const title = line.replace(/^##\s*/, "")
+      i++
+      const sectionLines: string[] = []
+      while (i < lines.length && !lines[i].startsWith("## ")) {
+        if (lines[i].trim()) sectionLines.push(lines[i])
+        i++
+      }
+
+      const iconMap: Record<string, string> = {
+        title: "briefcase",
+        about: "info",
+        responsibility: "list-checks",
+        requirement: "graduation-cap",
+        qualification: "graduation-cap",
+        offer: "gift",
+        company: "building",
+      }
+
+      const iconKey = Object.keys(iconMap).find((k) =>
+        title.toLowerCase().includes(k),
+      )
+
+      elements.push(
+        <div key={`s-${elements.length}`} className="rounded-xl border border-[#EAE8FF] bg-white p-4 shadow-sm">
+          <h3
+            className={`mb-3 text-sm font-bold ${
+              isRtl ? "text-right" : ""
+            } text-[#3D2BFF]`}
+            dir={isRtl ? "rtl" : "ltr"}
+          >
+            {iconMap[iconKey ?? ""] && (
+              <span className="mr-2 inline-block h-4 w-4 rounded bg-[#3D2BFF]/10 text-center text-xs leading-4">
+                {getSectionIcon(iconKey ?? "")}
+              </span>
+            )}
+            {title}
+          </h3>
+          <div className="space-y-1.5">
+            {renderSectionContent(sectionLines, isRtl)}
+          </div>
+        </div>,
+      )
+    } else if (line.startsWith("**") && line.endsWith("**")) {
+      const title = line.replace(/\*\*/g, "")
+      i++
+      elements.push(
+        <div key={`s-${elements.length}`}>
+          <h4 className={`text-xs font-semibold uppercase tracking-wider text-[#6b7280] ${isRtl ? "text-right" : ""}`}>
+            {title}
+          </h4>
+          <div className="mt-1 space-y-1">
+            {renderSectionContent(collectUntilNextHeading(lines, i), isRtl)}
+          </div>
+        </div>,
+      )
+      i = advancePast(lines, i)
+    } else if (line.trim()) {
+      elements.push(
+        <p key={`p-${elements.length}`} className={`text-sm leading-relaxed text-[#4b5563] ${isRtl ? "text-right" : ""}`} dir={isRtl ? "rtl" : "ltr"}>
+          {line}
+        </p>,
+      )
+      i++
+    } else {
+      i++
+    }
+  }
+
+  return elements
+}
+
+function collectUntilNextHeading(lines: string[], start: number): string[] {
+  const collected: string[] = []
+  for (let j = start; j < lines.length; j++) {
+    if (lines[j].startsWith("## ") || lines[j].startsWith("**") && lines[j].endsWith("**")) break
+    if (lines[j].trim()) collected.push(lines[j])
+  }
+  return collected
+}
+
+function advancePast(lines: string[], start: number): number {
+  for (let j = start; j < lines.length; j++) {
+    if (lines[j].startsWith("## ") || lines[j].startsWith("**") && lines[j].endsWith("**")) return j
+  }
+  return lines.length
+}
+
+function renderSectionContent(lines: string[], isRtl: boolean) {
+  return lines.map((line, idx) => {
+    if (line.startsWith("- ")) {
+      return (
+        <li
+          key={idx}
+          className={`ml-4 list-disc text-sm leading-relaxed text-[#4b5563] ${isRtl ? "mr-4 ml-0 text-right" : ""}`}
+          dir={isRtl ? "rtl" : "ltr"}
+        >
+          {line.replace(/^- /, "")}
+        </li>
+      )
+    }
+    return (
+      <p key={idx} className={`text-sm leading-relaxed text-[#4b5563] ${isRtl ? "text-right" : ""}`} dir={isRtl ? "rtl" : "ltr"}>
+        {line}
+      </p>
+    )
+  })
+}
+
+function getSectionIcon(key: string): string {
+  const icons: Record<string, string> = {
+    title: "💼",
+    about: "ℹ️",
+    responsibility: "✓",
+    requirement: "🎓",
+    qualification: "🎓",
+    offer: "🎁",
+    company: "🏢",
+  }
+  return icons[key] ?? "•"
 }
 
 function BookingFormInline({ onClose }: { onClose: () => void }) {
