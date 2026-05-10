@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type ReactElement, useCallback } from "react"
 import Link from "next/link"
-import { Loader2, CheckCircle, X, Sparkles } from "lucide-react"
+import { Loader2, X, Sparkles } from "lucide-react"
 import { findDemoRole, SAMPLE_JDS, DEMO_ROLES } from "./hero-demo-data"
 
 const TAGS = [
@@ -311,7 +311,7 @@ export default function Hero() {
           </div>
         </div>
       </div>
-      {/* Booking popup */}
+      {/* Sign-in popup */}
       {showBookingPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="relative mx-4 w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
@@ -330,11 +330,17 @@ export default function Hero() {
                 You&apos;ve used all free generations!
               </h3>
               <p className="mt-1.5 text-sm text-[#6b7280]">
-                Want unlimited access? Book a demo to see what Rolevia can do for your team.
+                Sign in to continue using Rolevia with unlimited access.
               </p>
             </div>
 
-            <BookingFormInline onClose={() => setShowBookingPopup(false)} />
+            <Link
+              href="/sign-in"
+              onClick={() => setShowBookingPopup(false)}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#3D2BFF] px-6 py-3 text-sm font-medium text-white shadow-lg shadow-[#3D2BFF]/25 transition-all hover:bg-[#3525E0]"
+            >
+              Sign in
+            </Link>
           </div>
         </div>
       )}
@@ -535,101 +541,4 @@ function getSectionIcon(key: string): string {
     company: "🏢",
   }
   return icons[key] ?? "•"
-}
-
-function BookingFormInline({ onClose }: { onClose: () => void }) {
-  const [email, setEmail] = useState("")
-  const [error, setError] = useState("")
-  const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(false)
-
-  function validateEmail(value: string) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError("")
-
-    if (!email.trim()) {
-      setError("Email is required")
-      return
-    }
-
-    if (!validateEmail(email)) {
-      setError("Please enter a valid email")
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      const res = await fetch("/api/book", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error || "Something went wrong")
-        return
-      }
-
-      setSubmitted(true)
-    } catch {
-      setError("Network error. Please try again.")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (submitted) {
-    return (
-      <div className="flex items-center gap-3 rounded-xl border border-[#10B981]/20 bg-[#10B981]/5 px-6 py-4">
-        <CheckCircle className="h-5 w-5 shrink-0 text-[#10B981]" />
-        <div className="text-left">
-          <p className="text-sm font-semibold text-[#111827]">You&apos;re booked!</p>
-          <p className="text-xs text-[#6b7280]">We&apos;ll confirm your demo slot shortly.</p>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <div>
-        <input
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value)
-            if (error) setError("")
-          }}
-          disabled={loading}
-          className="w-full rounded-xl border border-[#EAE8FF] bg-white px-4 py-3 text-sm text-[#111827] outline-none transition-all placeholder:text-[#9ca3af] focus:border-[#3D2BFF]/40"
-        />
-        {error && <p className="mt-1 text-xs text-[#FF5C3A]">{error}</p>}
-      </div>
-      <button
-        type="submit"
-        disabled={loading}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#3D2BFF] px-6 py-3 text-sm font-medium text-white shadow-lg shadow-[#3D2BFF]/25 transition-all hover:bg-[#3525E0] disabled:opacity-50"
-      >
-        {loading ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Booking...
-          </>
-        ) : (
-          "Book a live demo"
-        )}
-      </button>
-      <p className="text-center text-xs text-[#9ca3af]">
-        No credit card required &middot; Cancel anytime
-      </p>
-    </form>
-  )
 }
