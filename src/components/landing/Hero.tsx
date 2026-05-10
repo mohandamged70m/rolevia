@@ -170,28 +170,6 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Language selector */}
-          <div className="mb-4">
-            <label className="mb-1.5 block text-xs font-medium text-[#6b7280]">
-              Output language
-            </label>
-            <div className="flex gap-1 rounded-xl border border-[#EAE8FF] bg-[#F8F7FF] p-1">
-              {LANGUAGE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setLanguage(opt.value)}
-                  className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                    language === opt.value
-                      ? "bg-white text-[#3D2BFF] shadow-sm"
-                      : "text-[#6b7280] hover:text-[#111827]"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Tag chips */}
           <div className="mb-6 flex flex-wrap gap-2">
             {TAGS.map((tag) => (
