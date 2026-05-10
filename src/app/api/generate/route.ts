@@ -4,18 +4,60 @@ import { getIp, getUsage, incrementUsage, GENERATION_LIMIT } from "@/lib/usage-s
 
 const MODEL_ID = "gemini-2.5-flash"
 
-const SYSTEM_PROMPT =
-  `You are Rolevia, an AI job description writer for HR teams in the MENA region. ` +
-  `Generate a professional bilingual (Arabic + English) job description for the given role ` +
-  `following KSA/UAE labor law standards.\n\n` +
-  `Structure your response with clear section headings using markdown (## headings):\n` +
-  `## Job Title (English + Arabic)\n` +
-  `## About the Role (English then Arabic)\n` +
-  `## Key Responsibilities (English then Arabic)\n` +
-  `## Qualifications & Requirements (English then Arabic)\n` +
-  `## What We Offer (English then Arabic)\n\n` +
-  `Use professional HR language. Output ONLY the job description, no thinking or extra text. ` +
-  `Keep it concise but comprehensive (~300 words total).`
+type Language = "arabic" | "english" | "both"
+
+function buildSystemPrompt(language: Language): string {
+  const base =
+    `You are Rolevia, an AI job description writer for HR teams in the MENA region. ` +
+    `Generate a professional job description for the given role ` +
+    `following KSA/UAE labor law standards.\n\n` +
+    `Structure your response with clear section headings using markdown (## headings).\n` +
+    `Use professional HR language. Output ONLY the job description, no thinking or extra text. ` +
+    `Keep it concise but comprehensive (~300 words total).`
+
+  if (language === "english") {
+    return (
+      base +
+      `\n\nGenerate in English only. Use these sections:\n` +
+      `## Job Title\n` +
+      `## About the Role\n` +
+      `## Key Responsibilities\n` +
+      `## Qualifications & Requirements\n` +
+      `## What We Offer`
+    )
+  }
+
+  if (language === "arabic") {
+    return (
+      base +
+      `\n\nباللغة العربية فقط. استخدم الأقسام التالية:\n` +
+      `## المسمى الوظيفي\n` +
+      `## عن الوظيفة\n` +
+      `## المسؤوليات الرئيسية\n` +
+      `## المؤهلات والمتطلبات\n` +
+      `## ما نقدمه`
+    )
+  }
+
+  return (
+    base +
+    `\n\nGenerate bilingually (Arabic + English). Present each section in English first, then Arabic. Use these sections:\n` +
+    `## Job Title (English + Arabic)\n` +
+    `## About the Role (English then Arabic)\n` +
+    `## Key Responsibilities (English then Arabic)\n` +
+    `## Qualifications & Requirements (English then Arabic)\n` +
+    `## What We Offer (English then Arabic)`
+  )
+}
+
+function buildContentPrompt(role: string, language: Language): string {
+  const labels: Record<Language, string> = {
+    english: `Generate an English job description for: ${role}`,
+    arabic: `قم بإنشاء وصف وظيفي باللغة العربية للدور: ${role}`,
+    both: `Generate a bilingual job description for: ${role}`,
+  }
+  return labels[language]
+}
 
 export async function GET(request: Request) {
   const ip = getIp(request)
@@ -35,7 +77,8 @@ export async function POST(request: Request) {
       )
     }
 
-    const { role } = await request.json()
+    const { role, language = "both" } = await request.json()
+    const lang: Language = ["arabic", "english", "both"].includes(language) ? language : "both"
 
     if (!role || typeof role !== "string") {
       return NextResponse.json({ error: "Role is required" }, { status: 400 })
@@ -52,11 +95,11 @@ export async function POST(request: Request) {
     const response = await ai.models.generateContent({
       model: MODEL_ID,
       config: {
-        systemInstruction: SYSTEM_PROMPT,
+        systemInstruction: buildSystemPrompt(lang),
         temperature: 0.7,
         maxOutputTokens: 2048,
       },
-      contents: `Generate a bilingual job description for: ${role}`,
+      contents: buildContentPrompt(role, lang),
     })
 
     const text = response.text

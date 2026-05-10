@@ -15,8 +15,17 @@ const TAGS = [
 
 const GENERATION_LIMIT = 3
 
+type Language = "arabic" | "english" | "both"
+
+const LANGUAGE_OPTIONS: { value: Language; label: string }[] = [
+  { value: "english", label: "English" },
+  { value: "arabic", label: "Arabic" },
+  { value: "both", label: "Both" },
+]
+
 export default function Hero() {
   const [role, setRole] = useState("Senior Product Manager")
+  const [language, setLanguage] = useState<Language>("both")
   const [loading, setLoading] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -41,7 +50,7 @@ export default function Hero() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: role.trim() }),
+        body: JSON.stringify({ role: role.trim(), language }),
       })
       const data = await res.json()
 
@@ -158,6 +167,28 @@ export default function Hero() {
                     ? "Generating..."
                     : "Generate"}
               </button>
+            </div>
+          </div>
+
+          {/* Language selector */}
+          <div className="mb-4">
+            <label className="mb-1.5 block text-xs font-medium text-[#6b7280]">
+              Output language
+            </label>
+            <div className="flex gap-1 rounded-xl border border-[#EAE8FF] bg-[#F8F7FF] p-1">
+              {LANGUAGE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setLanguage(opt.value)}
+                  className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                    language === opt.value
+                      ? "bg-white text-[#3D2BFF] shadow-sm"
+                      : "text-[#6b7280] hover:text-[#111827]"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -287,10 +318,11 @@ export default function Hero() {
               Export to ATS
             </button>
             <button
+              onClick={() => setLanguage(language === "arabic" ? "both" : "arabic")}
               disabled={!generatedContent}
               className="rounded-lg border border-[#EAE8FF] px-4 py-2 text-xs font-medium text-[#4b5563] transition-all hover:border-[#3D2BFF]/30 hover:text-[#3D2BFF] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Arabic version
+              {language === "arabic" ? "Switch language" : "Arabic version"}
             </button>
           </div>
         </div>
