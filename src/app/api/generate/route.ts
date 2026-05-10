@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai"
 import { NextResponse } from "next/server"
+import { getIp, getUsage, incrementUsage, GENERATION_LIMIT } from "@/lib/usage-store"
 
 const MODEL_ID = "gemini-2.5-flash"
 
@@ -16,8 +17,24 @@ const SYSTEM_PROMPT =
   `Use professional HR language. Output ONLY the job description, no thinking or extra text. ` +
   `Keep it concise but comprehensive (~300 words total).`
 
+export async function GET(request: Request) {
+  const ip = getIp(request)
+  const used = await getUsage(ip)
+  return NextResponse.json({ remaining: Math.max(0, GENERATION_LIMIT - used) })
+}
+
 export async function POST(request: Request) {
   try {
+    const ip = getIp(request)
+    const used = await getUsage(ip)
+
+    if (used >= GENERATION_LIMIT) {
+      return NextResponse.json(
+        { error: "You've used all free generations. Book a demo for unlimited access.", remaining: 0 },
+        { status: 403 },
+      )
+    }
+
     const { role } = await request.json()
 
     if (!role || typeof role !== "string") {
@@ -48,7 +65,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No content generated" }, { status: 500 })
     }
 
-    return NextResponse.json({ content: text })
+    const newUsed = await incrementUsage(ip)
+    const remaining = Math.max(0, GENERATION_LIMIT - newUsed)
+
+    return NextResponse.json({ content: text, remaining })
   } catch (error) {
     console.error("Generation error:", error)
     return NextResponse.json(

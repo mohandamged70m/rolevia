@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { Loader2, CheckCircle, X } from "lucide-react"
 
 const TAGS = [
   "Professional",
@@ -12,12 +13,23 @@ const TAGS = [
   "Include salary band",
 ]
 
+const GENERATION_LIMIT = 3
+
 export default function Hero() {
   const [role, setRole] = useState("Senior Product Manager")
   const [loading, setLoading] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [generationsRemaining, setGenerationsRemaining] = useState<number | null>(null)
+  const [showBookingPopup, setShowBookingPopup] = useState(false)
+
+  useEffect(() => {
+    fetch("/api/generate")
+      .then((r) => r.json())
+      .then((data) => setGenerationsRemaining(data.remaining))
+      .catch(() => setGenerationsRemaining(GENERATION_LIMIT))
+  }, [])
 
   async function handleGenerate() {
     if (!role.trim()) return
@@ -32,8 +44,18 @@ export default function Hero() {
         body: JSON.stringify({ role: role.trim() }),
       })
       const data = await res.json()
+
+      if (data.remaining !== undefined) {
+        setGenerationsRemaining(data.remaining)
+      }
+
       if (!res.ok) throw new Error(data.error || "Generation failed")
+
       setGeneratedContent(data.content)
+
+      if (data.remaining <= 0) {
+        setShowBookingPopup(true)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong")
     } finally {
@@ -127,10 +149,14 @@ export default function Hero() {
               />
               <button
                 onClick={handleGenerate}
-                disabled={loading || !role.trim()}
+                disabled={loading || !role.trim() || (generationsRemaining !== null && generationsRemaining <= 0)}
                 className="shrink-0 rounded-md bg-[#3D2BFF] px-4 py-1.5 text-xs font-medium text-white transition-all hover:bg-[#3525E0] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {loading ? "Generating..." : "Generate"}
+                {generationsRemaining !== null && generationsRemaining <= 0
+                  ? "Limit reached"
+                  : loading
+                    ? "Generating..."
+                    : "Generate"}
               </button>
             </div>
           </div>
@@ -146,6 +172,22 @@ export default function Hero() {
               </span>
             ))}
           </div>
+
+          {/* Remaining count */}
+          {generationsRemaining !== null && (
+            <div className="mb-3 flex items-center justify-between text-xs text-[#6b7280]">
+              <span>
+                {generationsRemaining > 0
+                  ? `${generationsRemaining} / ${GENERATION_LIMIT} free generations remaining`
+                  : "You've used all free generations"}
+              </span>
+              {generationsRemaining > 0 && generationsRemaining <= 2 && (
+                <span className="rounded-full border border-[#FFBD2E]/30 bg-[#FFBD2E]/10 px-2.5 py-0.5 font-medium text-[#B8860B]">
+                  {generationsRemaining === 1 ? "Last one!" : `${generationsRemaining} left`}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Output area */}
           <div className="min-h-[200px] rounded-xl bg-[#F8F7FF] p-5">
@@ -253,6 +295,130 @@ export default function Hero() {
           </div>
         </div>
       </div>
+      {/* Booking popup */}
+      {showBookingPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="relative mx-4 w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+            <button
+              onClick={() => setShowBookingPopup(false)}
+              className="absolute right-4 top-4 rounded-full p-1 text-[#9ca3af] transition-colors hover:bg-[#F8F7FF] hover:text-[#111827]"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-6 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#FFF0ED]">
+                <span className="text-xl">🎉</span>
+              </div>
+              <h3 className="text-lg font-bold text-[#111827]">
+                You&apos;ve used all free generations!
+              </h3>
+              <p className="mt-1.5 text-sm text-[#6b7280]">
+                Want unlimited access? Book a demo to see what Rolevia can do for your team.
+              </p>
+            </div>
+
+            <BookingFormInline onClose={() => setShowBookingPopup(false)} />
+          </div>
+        </div>
+      )}
     </section>
+  )
+}
+
+function BookingFormInline({ onClose }: { onClose: () => void }) {
+  const [email, setEmail] = useState("")
+  const [error, setError] = useState("")
+  const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  function validateEmail(value: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError("")
+
+    if (!email.trim()) {
+      setError("Email is required")
+      return
+    }
+
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email")
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const res = await fetch("/api/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || "Something went wrong")
+        return
+      }
+
+      setSubmitted(true)
+    } catch {
+      setError("Network error. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div className="flex items-center gap-3 rounded-xl border border-[#10B981]/20 bg-[#10B981]/5 px-6 py-4">
+        <CheckCircle className="h-5 w-5 shrink-0 text-[#10B981]" />
+        <div className="text-left">
+          <p className="text-sm font-semibold text-[#111827]">You&apos;re booked!</p>
+          <p className="text-xs text-[#6b7280]">We&apos;ll confirm your demo slot shortly.</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <div>
+        <input
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            if (error) setError("")
+          }}
+          disabled={loading}
+          className="w-full rounded-xl border border-[#EAE8FF] bg-white px-4 py-3 text-sm text-[#111827] outline-none transition-all placeholder:text-[#9ca3af] focus:border-[#3D2BFF]/40"
+        />
+        {error && <p className="mt-1 text-xs text-[#FF5C3A]">{error}</p>}
+      </div>
+      <button
+        type="submit"
+        disabled={loading}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#3D2BFF] px-6 py-3 text-sm font-medium text-white shadow-lg shadow-[#3D2BFF]/25 transition-all hover:bg-[#3525E0] disabled:opacity-50"
+      >
+        {loading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Booking...
+          </>
+        ) : (
+          "Book a live demo"
+        )}
+      </button>
+      <p className="text-center text-xs text-[#9ca3af]">
+        No credit card required &middot; Cancel anytime
+      </p>
+    </form>
   )
 }
