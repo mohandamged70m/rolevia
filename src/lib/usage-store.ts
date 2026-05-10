@@ -2,7 +2,16 @@ import fs from "fs/promises"
 import path from "path"
 import { getSupabase } from "./supabase/server"
 
-const STORE_PATH = path.join(process.cwd(), ".usage-store.json")
+function getStorePath(): string {
+  try {
+    const { accessSync } = require("fs")
+    accessSync(process.cwd(), fs.constants ? fs.constants.W_OK : 2)
+    return path.join(process.cwd(), ".usage-store.json")
+  } catch {
+    return path.join("/tmp", ".usage-store.json")
+  }
+}
+
 export const GENERATION_LIMIT = 3
 
 interface Store {
@@ -29,7 +38,7 @@ export function getIp(request: Request): string {
 
 async function readFileStore(): Promise<Store> {
   try {
-    const data = await fs.readFile(STORE_PATH, "utf-8")
+    const data = await fs.readFile(getStorePath(), "utf-8")
     return JSON.parse(data)
   } catch {
     return {}
@@ -38,7 +47,7 @@ async function readFileStore(): Promise<Store> {
 
 async function writeFileStore(store: Store): Promise<void> {
   try {
-    await fs.writeFile(STORE_PATH, JSON.stringify(store, null, 2))
+    await fs.writeFile(getStorePath(), JSON.stringify(store, null, 2))
   } catch (err) {
     console.warn("File store write failed (read-only fs?):", err)
   }

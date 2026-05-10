@@ -2,6 +2,16 @@ import { getSupabase } from "./supabase/server"
 
 const MONTHLY_LIMIT = 10
 
+function getStoreDir(): string {
+  try {
+    const { accessSync, constants } = require("fs")
+    accessSync(process.cwd(), constants.W_OK)
+    return require("path").join(process.cwd(), ".data", "user-usage")
+  } catch {
+    return require("path").join("/tmp", ".data", "user-usage")
+  }
+}
+
 export function getCurrentMonth(): string {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
@@ -11,20 +21,23 @@ export async function getMonthlyUsage(userId: string): Promise<{ used: number; l
   const supabase = getSupabase()
 
   if (supabase) {
-    const monthYear = getCurrentMonth()
-    const { count } = await supabase
-      .from("generations")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .eq("month_year", monthYear)
-    return { used: count ?? 0, limit: MONTHLY_LIMIT }
+    try {
+      const monthYear = getCurrentMonth()
+      const { count } = await supabase
+        .from("generations")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("month_year", monthYear)
+      return { used: count ?? 0, limit: MONTHLY_LIMIT }
+    } catch (err) {
+      console.error("Supabase usage fetch failed, using file fallback:", err)
+    }
   }
 
   const { readFileSync, existsSync, mkdirSync } = await import("fs")
-  const { join } = await import("path")
-  const dir = join(process.cwd(), ".data", "user-usage")
+  const dir = getStoreDir()
   mkdirSync(dir, { recursive: true })
-  const file = join(dir, `${userId}.json`)
+  const file = require("path").join(dir, `${userId}.json`)
 
   if (!existsSync(file)) return { used: 0, limit: MONTHLY_LIMIT }
 
@@ -38,24 +51,27 @@ export async function incrementMonthlyUsage(userId: string): Promise<number> {
   const monthYear = getCurrentMonth()
 
   if (supabase) {
-    const { error } = await supabase
-      .from("generations")
-      .insert({ user_id: userId, month_year: monthYear, count: 1 })
-    if (error) console.error("Failed to insert generation:", error)
+    try {
+      const { error } = await supabase
+        .from("generations")
+        .insert({ user_id: userId, month_year: monthYear, count: 1 })
+      if (error) console.error("Failed to insert generation:", error)
 
-    const { count } = await supabase
-      .from("generations")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .eq("month_year", monthYear)
-    return count ?? 0
+      const { count } = await supabase
+        .from("generations")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("month_year", monthYear)
+      return count ?? 0
+    } catch (err) {
+      console.error("Supabase usage increment failed, using file fallback:", err)
+    }
   }
 
   const { readFileSync, existsSync, mkdirSync, writeFileSync } = await import("fs")
-  const { join } = await import("path")
-  const dir = join(process.cwd(), ".data", "user-usage")
+  const dir = getStoreDir()
   mkdirSync(dir, { recursive: true })
-  const file = join(dir, `${userId}.json`)
+  const file = require("path").join(dir, `${userId}.json`)
 
   let data: Record<string, number> = {}
   if (existsSync(file)) {
