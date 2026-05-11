@@ -24,6 +24,7 @@ export default function GeneratePage() {
   const [output, setOutput] = useState<{ content: string; title: string; language: string } | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isRegenerating, setIsRegenerating] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -117,16 +118,23 @@ export default function GeneratePage() {
 
   async function handleSave() {
     if (!output) return
+    setIsSaving(true)
+    setError(null)
     try {
       const res = await fetch("/api/library/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: output.title, content: output.content, language: output.language }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Failed to save")
+      }
       router.push("/dashboard/library")
-    } catch {
-      setError("Failed to save")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save")
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -200,6 +208,7 @@ export default function GeneratePage() {
                 language={output.language as "arabic" | "english" | "both"}
                 onRegenerate={handleRegenerate}
                 onSave={handleSave}
+                isSaving={isSaving}
                 isRegenerating={isRegenerating}
               />
             ) : (
