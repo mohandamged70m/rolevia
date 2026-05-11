@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { isLemonConfigured, getCheckoutUrl } from "@/lib/payments/plans"
+import Link from "next/link"
+import { isClerkBillingEnabled } from "@/lib/payments/plans"
 
 interface UpgradeButtonProps {
   planId: string
@@ -13,26 +13,12 @@ interface UpgradeButtonProps {
 }
 
 export function UpgradeButton({
-  planId,
-  userId,
   label = "Upgrade",
   variant = "default",
   size = "md",
   className = "",
 }: UpgradeButtonProps) {
-  const [loading, setLoading] = useState(false)
-  const configured = isLemonConfigured()
-
-  function handleClick() {
-    if (!configured) return
-    setLoading(true)
-    const url = getCheckoutUrl(planId, userId)
-    if (url) {
-      window.location.href = url
-    } else {
-      setLoading(false)
-    }
-  }
+  const configured = isClerkBillingEnabled()
 
   const baseClass =
     "inline-flex items-center justify-center rounded-lg font-medium transition-all whitespace-nowrap"
@@ -47,7 +33,7 @@ export function UpgradeButton({
   if (!configured) {
     return (
       <span
-        title="Payment integration not configured"
+        title="Billing not configured"
         className={`${baseClass} ${sizeClass} cursor-not-allowed border border-[#EAE8FF] bg-[#F9F9FB] text-[#9ca3af] ${className}`}
       >
         {label}
@@ -56,12 +42,11 @@ export function UpgradeButton({
   }
 
   return (
-    <button
-      onClick={handleClick}
-      disabled={loading}
-      className={`${baseClass} ${sizeClass} ${variantClass} disabled:opacity-60 ${className}`}
+    <Link
+      href="/pricing"
+      className={`${baseClass} ${sizeClass} ${variantClass} ${className}`}
     >
-      {loading ? "Redirecting..." : label}
-    </button>
+      {label}
+    </Link>
   )
 }

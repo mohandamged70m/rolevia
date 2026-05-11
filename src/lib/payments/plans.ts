@@ -1,3 +1,5 @@
+import { auth } from "@clerk/nextjs/server"
+
 export interface Plan {
   id: "starter" | "pro" | "team"
   label: string
@@ -45,19 +47,23 @@ export function getPlanLimit(plan: string): number | "unlimited" {
   return PLAN_LIMITS[plan] ?? 10
 }
 
-export function isLemonConfigured(): boolean {
-  return !!(
-    process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL ||
-    process.env.LEMON_SQUEEZY_API_KEY
-  )
+export function getPlanPrice(plan: string): string {
+  const prices: Record<string, string> = {
+    free: "$0/mo",
+    starter: "$12/mo",
+    pro: "$29/mo",
+    team: "$79/mo",
+  }
+  return prices[plan] ?? "$0/mo"
 }
 
-export function getCheckoutUrl(planId: string, userId: string): string | null {
-  const baseUrl = process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL
-  const variantKey = `NEXT_PUBLIC_LEMON_VARIANT_${planId.toUpperCase()}`
-  const variantId = process.env[variantKey]
+export function isClerkBillingEnabled(): boolean {
+  return !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+}
 
-  if (!baseUrl || !variantId) return null
-
-  return `${baseUrl}/${variantId}?checkout[custom][clerk_user_id]=${encodeURIComponent(userId)}`
+export function getUserPlan(hasFn: (params: { plan: string }) => boolean): string {
+  if (hasFn({ plan: "team" })) return "team"
+  if (hasFn({ plan: "pro" })) return "pro"
+  if (hasFn({ plan: "starter" })) return "starter"
+  return "free"
 }

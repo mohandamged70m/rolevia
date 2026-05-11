@@ -1,9 +1,9 @@
-import { currentUser } from "@clerk/nextjs/server"
+import { currentUser, auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import { isClerkConfigured } from "@/lib/clerk"
-import { ensureUser, isSupabaseConfigured, getUser } from "@/lib/supabase/users"
+import { ensureUser, isSupabaseConfigured } from "@/lib/supabase/users"
 import { getMonthlyUsage, MONTHLY_LIMIT } from "@/lib/user-usage"
-import { PLANS, getPlanLimit, isLemonConfigured } from "@/lib/payments/plans"
+import { PLANS, getPlanLimit, getPlanPrice, getUserPlan, isClerkBillingEnabled } from "@/lib/payments/plans"
 import { UpgradeButton } from "@/components/app/UpgradeButton"
 import { SignOutButton } from "@/components/app/SignOutButton"
 
@@ -19,12 +19,8 @@ export default async function AccountPage() {
     await ensureUser(clerkUser.id, email)
   }
 
-  const { plan, plan_expires_at } = isSupabaseConfigured()
-    ? await getUser(clerkUser.id).then((u) => ({
-        plan: u?.plan ?? "free",
-        plan_expires_at: u?.plan_expires_at ?? null,
-      }))
-    : { plan: "free" as string, plan_expires_at: null as string | null }
+  const { has } = await auth()
+  const plan = getUserPlan(has)
 
   const { used, limit } = await getMonthlyUsage(clerkUser.id)
   const planLimit = getPlanLimit(plan)
@@ -32,27 +28,13 @@ export default async function AccountPage() {
   const isUnlimited = planLimit === "unlimited"
   const usagePercent = isUnlimited ? 0 : Math.min((used / effectiveLimit) * 100, 100)
 
-  const planPrice: Record<string, string> = {
-    free: "$0/mo",
-    starter: "$12/mo",
-    pro: "$29/mo",
-    team: "$79/mo",
-  }
+  const clerkBillingEnabled = isClerkBillingEnabled()
 
   const joinDate = clerkUser.createdAt
     ? new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date(clerkUser.createdAt))
     : null
 
   const isActivePlan = plan !== "free"
-  const statusLabel = plan_expires_at
-    ? new Date(plan_expires_at) > new Date()
-      ? "Active"
-      : "Expired"
-    : isActivePlan
-      ? "Active"
-      : null
-
-  const lemonConfigured = isLemonConfigured()
 
   function getUpgradeOptions() {
     switch (plan) {
@@ -69,7 +51,7 @@ export default async function AccountPage() {
 
   const upgradeOptions = getUpgradeOptions()
 
-  function StatusBadge({ plan, label }: { plan: string; label: string | null }) {
+  function StatusBadge({ plan }: { plan: string }) {
     if (plan === "free") {
       return (
         <span className="inline-block rounded-full bg-[#F0EEFF] px-3 py-1 text-xs font-medium text-[#3D2BFF]">
@@ -77,13 +59,9 @@ export default async function AccountPage() {
         </span>
       )
     }
-    if (!label) return null
-    const colors = label === "Active"
-      ? "bg-[#E8F5E9] text-[#2E7D32]"
-      : "bg-[#FFF3E0] text-[#E65100]"
     return (
-      <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${colors}`}>
-        {label}
+      <span className="inline-block rounded-full bg-[#E8F5E9] px-3 py-1 text-xs font-medium text-[#2E7D32]">
+        Active
       </span>
     )
   }
@@ -101,8 +79,8 @@ export default async function AccountPage() {
           <h2 className="font-heading text-sm font-semibold text-[#111827]">Current Plan</h2>
           <div className="mt-3 space-y-3">
             <div className="flex items-center gap-2">
-              <StatusBadge plan={plan} label={statusLabel} />
-              <span className="text-sm font-medium text-[#111827]">{planPrice[plan]}</span>
+              <StatusBadge plan={plan} />
+              <span className="text-sm font-medium text-[#111827]">{getPlanPrice(plan)}</span>
             </div>
 
             {/* Usage counter */}
@@ -130,12 +108,6 @@ export default async function AccountPage() {
                 </div>
               )}
             </div>
-
-            {plan_expires_at && (
-              <p className="text-xs text-[#6b7280]">
-                Next billing date: {new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(new Date(plan_expires_at))}
-              </p>
-            )}
 
             <ul className="space-y-1.5 pt-2 text-sm text-[#6b7280]">
               {plan === "free" && (
@@ -252,11 +224,23 @@ export default async function AccountPage() {
         <p className="mt-1 text-sm text-[#6b7280]">
           Manage your subscription, invoices, and payment methods.
         </p>
-        <div className="mt-3">
-          {lemonConfigured ? (
-            <span className="inline-block cursor-not-allowed rounded-lg border border-[#EAE8FF] bg-[#F9F9FB] px-4 py-2 text-sm text-[#9ca3af]">
-              Manage billing — coming soon
-            </span>
+        <div className="mt-3 flex gap-3">
+          {clerkBillingEnabled ? (
+            isActivePlan ? (
+              <a
+                href="/pricing"
+                className="inline-block rounded-lg border border-[#3D2BFF]/30 bg-white px-4 py-2 text-sm font-medium text-[#3D2BFF] transition-colors hover:bg-[#F8F7FF]"
+              >
+                Manage billing
+              </a>
+            ) : (
+              <a
+                href="/pricing"
+                className="inline-block rounded-lg bg-[#3D2BFF] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#3525E0]"
+              >
+                Choose a plan
+              </a>
+            )
           ) : (
             <span className="inline-block rounded-lg border border-[#EAE8FF] bg-[#F9F9FB] px-4 py-2 text-sm text-[#9ca3af]">
               Billing portal — not yet configured
@@ -272,9 +256,18 @@ export default async function AccountPage() {
           Irreversible actions for your account.
         </p>
         <div className="mt-3 flex flex-wrap gap-3">
-          <span className="cursor-not-allowed rounded-lg border border-[#EAE8FF] bg-[#F9F9FB] px-4 py-2 text-sm text-[#9ca3af]">
-            Cancel subscription — available on paid plans
-          </span>
+          {isActivePlan ? (
+            <a
+              href="/pricing"
+              className="rounded-lg border border-[#FF5C3A]/50 bg-white px-4 py-2 text-sm font-medium text-[#FF5C3A] transition-colors hover:bg-[#FFF5F2]"
+            >
+              Cancel subscription
+            </a>
+          ) : (
+            <span className="cursor-not-allowed rounded-lg border border-[#EAE8FF] bg-[#F9F9FB] px-4 py-2 text-sm text-[#9ca3af]">
+              Cancel subscription — no active subscription
+            </span>
+          )}
           <span className="cursor-not-allowed rounded-lg border border-[#EAE8FF] bg-[#F9F9FB] px-4 py-2 text-sm text-[#9ca3af]">
             Delete account — coming soon
           </span>
