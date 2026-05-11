@@ -110,38 +110,61 @@ export async function POST(request: Request) {
 
     const ai = new GoogleGenAI({ apiKey })
 
-    const response = await ai.models.generateContent({
-      model: MODEL_ID,
-      config: {
-        temperature: 0.7,
-        maxOutputTokens: 4096,
-      },
-      contents: buildSystemPrompt(lang) + "\n\n" + buildContentPrompt(role, lang),
-    })
+    let lastError: Error | null = null
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        await new Promise((r) => setTimeout(r, Math.min(1000 * 2 ** attempt, 8000)))
+      }
+      try {
+        const response = await ai.models.generateContent({
+          model: MODEL_ID,
+          config: {
+            temperature: 0.7,
+            maxOutputTokens: 4096,
+          },
+          contents: buildSystemPrompt(lang) + "\n\n" + buildContentPrompt(role, lang),
+        })
 
-    const text = response.text
+        const text = response.text
 
-    if (!text) {
-      return NextResponse.json({ error: "No content generated" }, { status: 500 })
+        if (text) {
+          const newUsed = await incrementMonthlyUsage(user.id)
+          const remaining = Math.max(0, limit - newUsed)
+
+          return NextResponse.json({
+            content: text,
+            used: newUsed,
+            limit,
+            remaining,
+          })
+        }
+
+        lastError = new Error("No content generated")
+        break
+      } catch (e) {
+        lastError = e instanceof Error ? e : new Error("Generation failed")
+        const msg = lastError.message
+        const isRetriable = msg.includes("503") || msg.includes("UNAVAILABLE") || msg.includes("500") || msg.includes("RESOURCE_EXHAUSTED") || msg.includes("429")
+        if (!isRetriable) break
+      }
     }
 
-    const newUsed = await incrementMonthlyUsage(user.id)
-    const remaining = Math.max(0, limit - newUsed)
-
-    return NextResponse.json({
-      content: text,
-      used: newUsed,
-      limit,
-      remaining,
-    })
+    throw lastError || new Error("Generation failed")
   } catch (error) {
     console.error("Dashboard generation error:", error)
     const msg = error instanceof Error ? error.message : "Generation failed"
     const isQuota = msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED")
+    const isUnavailable = msg.includes("503") || msg.includes("UNAVAILABLE")
     if (isQuota) {
       return NextResponse.json(
         { error: "Daily API limit reached. Please try again tomorrow or upgrade your plan.", retryAfter: "24h" },
         { status: 429 },
+      )
+    }
+    if (isUnavailable) {
+      return NextResponse.json(
+        { error: "AI service is temporarily unavailable. Please try again in a few seconds.", retryAfter: "5s" },
+        { status: 503 },
       )
     }
     return NextResponse.json(

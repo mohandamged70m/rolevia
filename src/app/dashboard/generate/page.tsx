@@ -66,7 +66,11 @@ export default function GeneratePage() {
 
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || "Generation failed")
+        const msg = err.error || "Generation failed"
+        if (res.status === 503) {
+          throw new Error("AI service is temporarily unavailable. Please try again in a few seconds.")
+        }
+        throw new Error(msg)
       }
 
       const result = await res.json()
@@ -101,7 +105,11 @@ export default function GeneratePage() {
 
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || "Regeneration failed")
+        const msg = err.error || "Regeneration failed"
+        if (res.status === 503) {
+          throw new Error("AI service is temporarily unavailable. Please try again in a few seconds.")
+        }
+        throw new Error(msg)
       }
 
       const result = await res.json()
