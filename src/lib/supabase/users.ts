@@ -27,28 +27,9 @@ export async function ensureUser(clerkUserId: string, email?: string | null): Pr
 
   const supabase = getAdminClient()
 
-  const { data: existing } = await supabase
-    .from("users")
-    .select("*")
-    .eq("clerk_user_id", clerkUserId)
-    .maybeSingle()
-
-  if (existing) {
-    if (email && existing.email !== email) {
-      const { data } = await supabase
-        .from("users")
-        .update({ email })
-        .eq("clerk_user_id", clerkUserId)
-        .select("*")
-        .single()
-      return data
-    }
-    return existing
-  }
-
   const { data } = await supabase
     .from("users")
-    .insert({ clerk_user_id: clerkUserId, email: email ?? null })
+    .upsert({ clerk_user_id: clerkUserId, email: email ?? null }, { onConflict: "clerk_user_id" })
     .select("*")
     .single()
 
