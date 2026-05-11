@@ -1,4 +1,4 @@
-import { getSupabase } from "./server"
+import { getAuthenticatedSupabase } from "./server"
 
 export interface UserRecord {
   id: number
@@ -11,13 +11,13 @@ export interface UserRecord {
 }
 
 export function isSupabaseConfigured(): boolean {
-  return !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY
+  return !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 }
 
 export async function ensureUser(clerkUserId: string, email?: string | null): Promise<UserRecord | null> {
   if (!isSupabaseConfigured()) return null
 
-  const supabase = getSupabase()
+  const supabase = await getAuthenticatedSupabase()
   if (!supabase) return null
 
   const { data: existing } = await supabase
@@ -51,7 +51,7 @@ export async function ensureUser(clerkUserId: string, email?: string | null): Pr
 export async function getUser(clerkUserId: string): Promise<UserRecord | null> {
   if (!isSupabaseConfigured()) return null
 
-  const supabase = getSupabase()
+  const supabase = await getAuthenticatedSupabase()
   if (!supabase) return null
 
   const { data } = await supabase

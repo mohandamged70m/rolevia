@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { currentUser } from "@clerk/nextjs/server"
+import { getAuthenticatedSupabase } from "@/lib/supabase/server"
 
 export async function POST(request: Request) {
   try {
@@ -14,11 +15,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Title and content are required" }, { status: 400 })
     }
 
-    const { createClient } = await import("@supabase/supabase-js")
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabase = await getAuthenticatedSupabase()
 
-    if (!supabaseUrl || !supabaseKey) {
+    if (!supabase) {
       const { writeFileSync, mkdirSync } = await import("fs")
       const { join } = await import("path")
       const dir = join(process.cwd(), ".data", "library")
@@ -29,7 +28,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, id })
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
     const { data, error } = await supabase
       .from("jd_library")
       .insert({ user_id: user.id, title, content, language })
