@@ -1,4 +1,4 @@
-import { getAuthenticatedSupabase } from "./server"
+import { getSupabase } from "./server"
 
 export interface UserRecord {
   id: number
@@ -11,14 +11,21 @@ export interface UserRecord {
 }
 
 export function isSupabaseConfigured(): boolean {
-  return !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  return !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY
+}
+
+function getAdminClient() {
+  const supabase = getSupabase()
+  if (!supabase) {
+    throw new Error("Supabase admin client not available")
+  }
+  return supabase
 }
 
 export async function ensureUser(clerkUserId: string, email?: string | null): Promise<UserRecord | null> {
   if (!isSupabaseConfigured()) return null
 
-  const supabase = await getAuthenticatedSupabase()
-  if (!supabase) return null
+  const supabase = getAdminClient()
 
   const { data: existing } = await supabase
     .from("users")
@@ -51,8 +58,7 @@ export async function ensureUser(clerkUserId: string, email?: string | null): Pr
 export async function getUser(clerkUserId: string): Promise<UserRecord | null> {
   if (!isSupabaseConfigured()) return null
 
-  const supabase = await getAuthenticatedSupabase()
-  if (!supabase) return null
+  const supabase = getAdminClient()
 
   const { data } = await supabase
     .from("users")
