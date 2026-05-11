@@ -5,6 +5,7 @@ import { ensureUser, isSupabaseConfigured, getUser } from "@/lib/supabase/users"
 import { getMonthlyUsage, MONTHLY_LIMIT } from "@/lib/user-usage"
 import { PLANS, getPlanLimit, isLemonConfigured } from "@/lib/payments/plans"
 import { UpgradeButton } from "@/components/app/UpgradeButton"
+import { SignOutButton } from "@/components/app/SignOutButton"
 
 export default async function AccountPage() {
   if (!isClerkConfigured) redirect("/")
@@ -277,6 +278,7 @@ export default async function AccountPage() {
           <span className="cursor-not-allowed rounded-lg border border-[#EAE8FF] bg-[#F9F9FB] px-4 py-2 text-sm text-[#9ca3af]">
             Delete account — coming soon
           </span>
+          <SignOutButton />
         </div>
       </div>
     </div>
