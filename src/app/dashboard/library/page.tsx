@@ -1,5 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 import Link from "next/link"
 import { isClerkConfigured } from "@/lib/clerk"
 import { LibraryItem } from "@/components/app/LibraryItem"
@@ -14,7 +15,9 @@ interface LibraryEntry {
 
 async function getLibrary(): Promise<LibraryEntry[]> {
   try {
+    const cookieStore = await cookies()
     const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/library/list`, {
+      headers: { Cookie: cookieStore.toString() },
       cache: "no-store",
     })
     if (!res.ok) return []

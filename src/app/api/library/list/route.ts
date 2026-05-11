@@ -28,17 +28,14 @@ export async function GET() {
     }
 
     if (items.length === 0 || !supabase) {
-      const { readdirSync, existsSync } = await import("fs")
+      const { readdirSync, existsSync, readFileSync } = await import("fs")
       const { join } = await import("path")
       const dir = join(process.cwd(), ".data", "library")
       if (existsSync(dir)) {
         const files = readdirSync(dir)
         items = files
           .filter((f) => f.endsWith(".json"))
-          .map((f) => {
-            const { readFileSync } = require("fs")
-            return JSON.parse(readFileSync(join(dir, f), "utf-8"))
-          })
+          .map((f) => JSON.parse(readFileSync(join(dir, f), "utf-8")))
           .filter((item: { user_id: string }) => item.user_id === user.id)
       }
     }
