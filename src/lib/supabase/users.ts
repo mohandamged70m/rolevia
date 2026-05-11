@@ -15,39 +15,51 @@ export function isSupabaseConfigured(): boolean {
 }
 
 function getAdminClient() {
-  const supabase = getSupabase()
-  if (!supabase) {
-    throw new Error("Supabase admin client not available")
+  try {
+    return getSupabase()
+  } catch {
+    return null
   }
-  return supabase
 }
 
 export async function ensureUser(clerkUserId: string, email?: string | null): Promise<UserRecord | null> {
   if (!isSupabaseConfigured()) return null
 
   const supabase = getAdminClient()
+  if (!supabase) return null
 
-  const { data } = await supabase
-    .from("users")
-    .upsert({ clerk_user_id: clerkUserId, email: email ?? null }, { onConflict: "clerk_user_id" })
-    .select("*")
-    .single()
+  try {
+    const { data } = await supabase
+      .from("users")
+      .upsert({ clerk_user_id: clerkUserId, email: email ?? null }, { onConflict: "clerk_user_id" })
+      .select("*")
+      .single()
 
-  return data
+    return data
+  } catch (err) {
+    console.error("ensureUser error:", err)
+    return null
+  }
 }
 
 export async function getUser(clerkUserId: string): Promise<UserRecord | null> {
   if (!isSupabaseConfigured()) return null
 
   const supabase = getAdminClient()
+  if (!supabase) return null
 
-  const { data } = await supabase
-    .from("users")
-    .select("*")
-    .eq("clerk_user_id", clerkUserId)
-    .maybeSingle()
+  try {
+    const { data } = await supabase
+      .from("users")
+      .select("*")
+      .eq("clerk_user_id", clerkUserId)
+      .maybeSingle()
 
-  return data
+    return data
+  } catch (err) {
+    console.error("getUser error:", err)
+    return null
+  }
 }
 
 export async function getUserPlan(clerkUserId: string): Promise<{ plan: string; plan_expires_at: string | null }> {
