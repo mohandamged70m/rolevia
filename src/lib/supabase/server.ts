@@ -19,17 +19,20 @@ export async function getAuthenticatedSupabase() {
     return null
   }
 
-  const { getToken } = await auth()
-  const token = await getToken({ template: "supabase" })
+  try {
+    const { getToken } = await auth()
+    const token = await getToken({ template: "supabase" })
+    if (!token) return null
 
-  if (!token) return null
-
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    },
-    auth: { persistSession: false },
-  })
+      auth: { persistSession: false },
+    })
+  } catch {
+    return null
+  }
 }
