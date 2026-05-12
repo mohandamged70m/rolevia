@@ -68,6 +68,7 @@ export default async function LibraryIdPage({ params }: PageProps) {
         Back to library
       </Link>
       <JdOutput
+        id={entry.id}
         title={entry.title}
         content={entry.content}
         language={entry.language as "arabic" | "english" | "both"}
