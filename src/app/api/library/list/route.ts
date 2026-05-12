@@ -1,5 +1,3 @@
-import { readdirSync, existsSync, readFileSync } from "fs"
-import { join } from "path"
 import { NextResponse } from "next/server"
 import { currentUser } from "@clerk/nextjs/server"
 import { getAuthenticatedSupabase } from "@/lib/supabase/server"
@@ -12,38 +10,22 @@ export async function GET() {
     }
 
     const supabase = await getAuthenticatedSupabase()
-
-    let items: any[] = []
-
-    if (supabase) {
-      const { data, error } = await supabase
-        .from("jd_library")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-
-      if (!error && data) {
-        items = data
-      } else {
-        console.warn("Supabase list failed:", error?.message)
-      }
+    if (!supabase) {
+      return NextResponse.json({ error: "Database not configured" }, { status: 500 })
     }
 
-    if (items.length === 0 || !supabase) {
-      const dir = join(process.cwd(), ".data", "library")
-      if (existsSync(dir)) {
-        const files = readdirSync(dir)
-        items = files
-          .filter((f) => f.endsWith(".json"))
-          .map((f) => JSON.parse(readFileSync(join(dir, f), "utf-8")))
-          .filter((item: { user_id: string }) => item.user_id === user.id)
-      }
+    const { data, error } = await supabase
+      .from("jd_library")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Supabase list failed:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    items.sort((a: { created_at: string }, b: { created_at: string }) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    )
-    return NextResponse.json({ items, total: items.length })
+    return NextResponse.json({ items: data, total: data.length })
   } catch (error) {
     console.error("Library list error:", error)
     const message = error instanceof Error ? error.message : "Failed to list"

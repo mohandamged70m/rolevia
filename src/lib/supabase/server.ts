@@ -22,17 +22,27 @@ export async function getAuthenticatedSupabase() {
   try {
     const { getToken } = await auth()
     const token = await getToken({ template: "supabase" })
-    if (!token) return null
-
-    return createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`,
+    if (token) {
+      return createClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      },
+        auth: { persistSession: false },
+      })
+    }
+  } catch {
+    // fall through to service role fallback
+  }
+
+  // Fall back to service role when Clerk JWT template is missing
+  // Safe because API routes already authenticate via Clerk's currentUser()
+  if (supabaseUrl && supabaseServiceKey) {
+    return createClient(supabaseUrl, supabaseServiceKey, {
       auth: { persistSession: false },
     })
-  } catch {
-    return null
   }
+
+  return null
 }
