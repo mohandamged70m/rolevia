@@ -1,11 +1,12 @@
 import { currentUser, auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import { isClerkConfigured } from "@/lib/clerk"
-import { ensureUser, isSupabaseConfigured } from "@/lib/supabase/users"
+import { ensureUser, getUser, isSupabaseConfigured } from "@/lib/supabase/users"
 import { getMonthlyUsage, MONTHLY_LIMIT } from "@/lib/user-usage"
 import { PLANS, getPlanLimit, getPlanPrice, getUserPlan, isClerkBillingEnabled } from "@/lib/payments/plans"
 import { UpgradeButton } from "@/components/app/UpgradeButton"
 import { SignOutButton } from "@/components/app/SignOutButton"
+import { LinkedInSection } from "@/components/app/LinkedInSection"
 
 export default async function AccountPage() {
   if (!isClerkConfigured) redirect("/")
@@ -15,8 +16,11 @@ export default async function AccountPage() {
 
   const email = clerkUser.emailAddresses[0]?.emailAddress ?? null
 
+  let linkedinUrl: string | null = null
   if (isSupabaseConfigured()) {
     await ensureUser(clerkUser.id, email)
+    const record = await getUser(clerkUser.id)
+    linkedinUrl = (record as { linkedin_url?: string | null } | null)?.linkedin_url ?? null
   }
 
   const { has } = await auth()
@@ -174,6 +178,9 @@ export default async function AccountPage() {
           </div>
         </div>
       </div>
+
+      {/* LinkedIn */}
+      <LinkedInSection initialUrl={linkedinUrl} />
 
       {/* Upgrade Section */}
       {upgradeOptions.length > 0 && (
