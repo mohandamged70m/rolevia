@@ -6,7 +6,6 @@ import { getMonthlyUsage, MONTHLY_LIMIT } from "@/lib/user-usage"
 import { PLANS, getPlanLimit, getPlanPrice, getUserPlan, isClerkBillingEnabled } from "@/lib/payments/plans"
 import { UpgradeButton } from "@/components/app/UpgradeButton"
 import { SignOutButton } from "@/components/app/SignOutButton"
-import { LinkedInSection } from "@/components/app/LinkedInSection"
 
 export default async function AccountPage() {
   if (!isClerkConfigured) redirect("/")
@@ -175,9 +174,6 @@ export default async function AccountPage() {
           </div>
         </div>
       </div>
-
-      {/* LinkedIn */}
-      <LinkedInSection />
 
       {/* Upgrade Section */}
       {upgradeOptions.length > 0 && (
