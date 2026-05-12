@@ -1,4 +1,6 @@
-create table if not exists jd_library (
+drop table if exists jd_library cascade;
+
+create table jd_library (
   id text primary key,
   user_id text not null,
   title text not null,
