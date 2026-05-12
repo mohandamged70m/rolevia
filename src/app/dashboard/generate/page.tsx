@@ -189,7 +189,7 @@ export default function GeneratePage() {
           </p>
         </div>
         {usage && (
-          <div className="flex items-center gap-2 self-start rounded-xl border border-[#EAE8FF] bg-white px-3 py-2 text-sm">
+          <div className="flex items-center gap-2 self-start rounded-xl border border-[#EAE8FF] bg-white px-3 py-2 text-sm shadow-xs">
             <span className="whitespace-nowrap text-[#6b7280]">Monthly usage:</span>
             <span className={`font-semibold ${usage.used >= usage.limit ? "text-[#FF5C3A]" : "text-[#111827]"}`}>
               {usage.used}/{usage.limit}
@@ -238,8 +238,13 @@ export default function GeneratePage() {
 
           <div>
             {error && (
-              <div className="mb-4 rounded-xl border border-[#FF5C3A]/20 bg-[#FF5C3A]/5 p-4 text-sm text-[#FF5C3A]">
-                {error}
+              <div className="mb-4 flex items-start gap-3 rounded-xl border border-[#FF5C3A]/20 bg-[#FF5C3A]/5 p-4 text-sm text-[#FF5C3A]">
+                <svg className="mt-0.5 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span>{error}</span>
               </div>
             )}
             {output ? (
@@ -253,11 +258,60 @@ export default function GeneratePage() {
                 isSaving={isSaving}
                 isRegenerating={isRegenerating}
               />
+            ) : isGenerating ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="h-5 w-40 animate-pulse rounded bg-[#EAE8FF]" />
+                  <div className="flex gap-2">
+                    <div className="h-7 w-16 animate-pulse rounded-lg bg-[#EAE8FF]" />
+                    <div className="h-7 w-16 animate-pulse rounded-lg bg-[#EAE8FF]" />
+                  </div>
+                </div>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="space-y-3 rounded-xl border border-[#EAE8FF] bg-white p-5">
+                    <div className="h-4 w-24 animate-pulse rounded bg-[#EAE8FF]" />
+                    <div className="h-3 w-full animate-pulse rounded bg-[#F5F5F5]" />
+                    <div className="h-3 w-3/4 animate-pulse rounded bg-[#F5F5F5]" />
+                    <div className="h-3 w-5/6 animate-pulse rounded bg-[#F5F5F5]" />
+                    <div className="h-3 w-2/3 animate-pulse rounded bg-[#F5F5F5]" />
+                  </div>
+                  <div className="space-y-3 rounded-xl border border-[#EAE8FF] bg-white p-5" dir="rtl">
+                    <div className="h-4 w-24 animate-pulse rounded bg-[#EAE8FF]" />
+                    <div className="h-3 w-full animate-pulse rounded bg-[#F5F5F5]" />
+                    <div className="h-3 w-3/4 animate-pulse rounded bg-[#F5F5F5]" />
+                    <div className="h-3 w-5/6 animate-pulse rounded bg-[#F5F5F5]" />
+                    <div className="h-3 w-2/3 animate-pulse rounded bg-[#F5F5F5]" />
+                  </div>
+                </div>
+              </div>
             ) : (
-              <div className="flex h-full min-h-[200px] items-center justify-center rounded-xl border border-dashed border-[#EAE8FF] bg-white/50">
-                <p className="text-sm text-[#9ca3af]">
-                  {isGenerating ? "Generating..." : "Your JD output will appear here"}
+              <div className="flex h-full min-h-[400px] flex-col items-center justify-center rounded-xl border border-dashed border-[#EAE8FF] bg-white/50 px-6">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0EEFF]">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3D2BFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+                    <path d="M14 2v6h6" />
+                    <path d="M12 18v-6" />
+                    <path d="m9 15 3-3 3 3" />
+                  </svg>
+                </div>
+                <h3 className="mt-4 font-heading text-sm font-semibold text-[#111827]">Ready to create a JD</h3>
+                <p className="mt-1 max-w-xs text-center text-xs text-[#9ca3af]">
+                  Fill in the form and click generate. Your bilingual job description will appear here.
                 </p>
+                <div className="mt-5 flex gap-4 text-xs text-[#6b7280]">
+                  <span className="flex items-center gap-1">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3D2BFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    English + Arabic
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3D2BFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Save to library
+                  </span>
+                </div>
               </div>
             )}
           </div>

@@ -86,6 +86,10 @@ function OutputPanel({ content, rtl }: { content: string; rtl: boolean }) {
   )
 }
 
+function countWords(text: string): number {
+  return text.split(/\s+/).filter(Boolean).length
+}
+
 export function JdOutput({
   id,
   title,
@@ -96,25 +100,44 @@ export function JdOutput({
   isSaving,
   isRegenerating,
 }: JdOutputProps) {
+  const wordCount = countWords(content)
+
   if (language === "both") {
     const { english, arabic } = splitBilingual(content)
 
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          {title && (
-            <h2 className="font-heading text-base font-semibold text-[#111827]">{title}</h2>
-          )}
-          <div className="flex items-center gap-2">
-            {id && (
-              <span className="rounded-full bg-[#F5F5F5] px-2 py-0.5 text-[10px] font-mono text-[#9ca3af]">
-                #{id.slice(0, 8)}
+        <div className="sticky top-0 z-10 -mx-6 -mt-2 rounded-t-xl border-b border-[#EAE8FF] bg-white/95 px-6 pb-3 pt-4 backdrop-blur-sm sm:static sm:mx-0 sm:border-b-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              {title && (
+                <h2 className="truncate font-heading text-base font-semibold text-[#111827]">{title}</h2>
+              )}
+              {id && (
+                <span className="shrink-0 rounded-full bg-[#F5F5F5] px-2 py-0.5 text-[10px] font-mono text-[#9ca3af]">
+                  #{id.slice(0, 8)}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-[#9ca3af]">{wordCount} words</span>
+              <span className="rounded-full bg-[#F0EEFF] px-2 py-0.5 text-[10px] font-medium text-[#3D2BFF]">
+                AR / EN
               </span>
-            )}
-            <span className="rounded-full bg-[#F0EEFF] px-2 py-0.5 text-[10px] font-medium text-[#3D2BFF]">
-              AR / EN
-            </span>
+            </div>
           </div>
+          <div className="mt-2 sm:hidden">
+            <JdActions
+              content={content}
+              onRegenerate={onRegenerate}
+              onSave={onSave}
+              isSaving={isSaving}
+              isRegenerating={isRegenerating}
+            />
+          </div>
+        </div>
+
+        <div className="hidden sm:block">
           <JdActions
             content={content}
             onRegenerate={onRegenerate}
@@ -146,20 +169,37 @@ export function JdOutput({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        {title && (
-          <h2 className="font-heading text-base font-semibold text-[#111827]">{title}</h2>
-        )}
-        <div className="flex items-center gap-2">
-          {id && (
-            <span className="rounded-full bg-[#F5F5F5] px-2 py-0.5 text-[10px] font-mono text-[#9ca3af]">
-              #{id.slice(0, 8)}
+      <div className="sticky top-0 z-10 -mx-6 -mt-2 rounded-t-xl border-b border-[#EAE8FF] bg-white/95 px-6 pb-3 pt-4 backdrop-blur-sm sm:static sm:mx-0 sm:border-b-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            {title && (
+              <h2 className="truncate font-heading text-base font-semibold text-[#111827]">{title}</h2>
+            )}
+            {id && (
+              <span className="shrink-0 rounded-full bg-[#F5F5F5] px-2 py-0.5 text-[10px] font-mono text-[#9ca3af]">
+                #{id.slice(0, 8)}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-[#9ca3af]">{wordCount} words</span>
+            <span className="rounded-full bg-[#F0EEFF] px-2 py-0.5 text-[10px] font-medium text-[#3D2BFF]">
+              {language === "arabic" ? "AR" : "EN"}
             </span>
-          )}
-          <span className="rounded-full bg-[#F0EEFF] px-2 py-0.5 text-[10px] font-medium text-[#3D2BFF]">
-            {language === "arabic" ? "AR" : "EN"}
-          </span>
+          </div>
         </div>
+        <div className="mt-2 sm:hidden">
+          <JdActions
+            content={content}
+            onRegenerate={onRegenerate}
+            onSave={onSave}
+            isSaving={isSaving}
+            isRegenerating={isRegenerating}
+          />
+        </div>
+      </div>
+
+      <div className="hidden sm:block">
         <JdActions
           content={content}
           onRegenerate={onRegenerate}
