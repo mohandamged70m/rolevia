@@ -27,7 +27,7 @@ interface UsageInfo {
 export default function GeneratePage() {
   const router = useRouter()
   const [usage, setUsage] = useState<UsageInfo | null>(null)
-  const [output, setOutput] = useState<{ content: string; title: string; language: string } | null>(null)
+  const [output, setOutput] = useState<{ id: string; content: string; title: string; language: string } | null>(null)
   const [lastFormData, setLastFormData] = useState<FormData | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isRegenerating, setIsRegenerating] = useState(false)
@@ -94,7 +94,7 @@ export default function GeneratePage() {
       }
 
       const result = await res.json()
-      setOutput({ content: result.content, title: data.title, language: data.language })
+      setOutput({ id: crypto.randomUUID(), content: result.content, title: data.title, language: data.language })
       setUsage({ used: result.used, limit: result.limit })
       setError(null)
       window.dispatchEvent(new CustomEvent("usage-updated"))
@@ -146,7 +146,7 @@ export default function GeneratePage() {
       }
 
       const result = await res.json()
-      setOutput((prev) => prev ? { ...prev, content: result.content } : prev)
+      setOutput((prev) => prev ? { ...prev, id: crypto.randomUUID(), content: result.content } : prev)
       setUsage({ used: result.used, limit: result.limit })
       setError(null)
       window.dispatchEvent(new CustomEvent("usage-updated"))
@@ -165,7 +165,7 @@ export default function GeneratePage() {
       const res = await fetch("/api/library/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: output.title, content: output.content, language: output.language }),
+        body: JSON.stringify({ id: output.id, title: output.title, content: output.content, language: output.language }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
@@ -244,6 +244,7 @@ export default function GeneratePage() {
             )}
             {output ? (
               <JdOutput
+                id={output.id}
                 title={output.title}
                 content={output.content}
                 language={output.language as "arabic" | "english" | "both"}

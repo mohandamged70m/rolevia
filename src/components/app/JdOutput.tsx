@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 import { JdActions } from "./JdActions"
 
 interface JdOutputProps {
+  id?: string
   title?: string
   content: string
   language?: "arabic" | "english" | "both"
@@ -86,6 +87,7 @@ function OutputPanel({ content, rtl }: { content: string; rtl: boolean }) {
 }
 
 export function JdOutput({
+  id,
   title,
   content,
   language = "both",
@@ -104,6 +106,11 @@ export function JdOutput({
             <h2 className="font-heading text-base font-semibold text-[#111827]">{title}</h2>
           )}
           <div className="flex items-center gap-2">
+            {id && (
+              <span className="rounded-full bg-[#F5F5F5] px-2 py-0.5 text-[10px] font-mono text-[#9ca3af]">
+                #{id.slice(0, 8)}
+              </span>
+            )}
             <span className="rounded-full bg-[#F0EEFF] px-2 py-0.5 text-[10px] font-medium text-[#3D2BFF]">
               AR / EN
             </span>
@@ -143,9 +150,16 @@ export function JdOutput({
         {title && (
           <h2 className="font-heading text-base font-semibold text-[#111827]">{title}</h2>
         )}
-        <span className="rounded-full bg-[#F0EEFF] px-2 py-0.5 text-[10px] font-medium text-[#3D2BFF]">
-          {language === "arabic" ? "AR" : "EN"}
-        </span>
+        <div className="flex items-center gap-2">
+          {id && (
+            <span className="rounded-full bg-[#F5F5F5] px-2 py-0.5 text-[10px] font-mono text-[#9ca3af]">
+              #{id.slice(0, 8)}
+            </span>
+          )}
+          <span className="rounded-full bg-[#F0EEFF] px-2 py-0.5 text-[10px] font-medium text-[#3D2BFF]">
+            {language === "arabic" ? "AR" : "EN"}
+          </span>
+        </div>
         <JdActions
           content={content}
           onRegenerate={onRegenerate}
