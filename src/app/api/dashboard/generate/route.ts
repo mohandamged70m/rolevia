@@ -70,6 +70,31 @@ function buildSystemPrompt(language: Language): string {
   )
 }
 
+function buildContextBlock(context: Record<string, string | string[] | undefined>): string {
+  const lines: string[] = ["## INPUT CONTEXT"]
+  const items: Record<string, string> = {}
+
+  if (context.industry) items["Industry"] = context.industry as string
+  if (context.tone) items["Company Tone"] = context.tone as string
+  if (context.companyName) items["Company Name"] = context.companyName as string
+  if (context.location) items["Location"] = context.location as string
+  if (context.experienceLevel) items["Experience Level"] = context.experienceLevel as string
+  if (context.employmentType) items["Employment Type"] = context.employmentType as string
+  if (context.salaryRange) items["Salary Range"] = context.salaryRange as string
+  if (context.skills) items["Key Skills"] = context.skills as string
+
+  const responsibilities = context.responsibilities
+  if (Array.isArray(responsibilities) && responsibilities.length > 0) {
+    items["Key Responsibilities"] = responsibilities.join(" | ")
+  }
+
+  for (const [key, val] of Object.entries(items)) {
+    lines.push(`- ${key}: ${val}`)
+  }
+
+  return lines.length > 1 ? lines.join("\n") : ""
+}
+
 function buildContentPrompt(role: string, language: Language): string {
   const labels: Record<Language, string> = {
     english: `Generate an English job description for the role: ${role}`,
@@ -95,7 +120,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { role, language = "both" } = await request.json()
+    const { role, language = "both", industry, tone, responsibilities, companyName, location, experienceLevel, employmentType, salaryRange, skills } = await request.json()
     const lang: Language = ["arabic", "english", "both"].includes(language) ? language : "both"
 
     if (!role || typeof role !== "string") {
@@ -122,7 +147,7 @@ export async function POST(request: Request) {
             temperature: 0.7,
             maxOutputTokens: 4096,
           },
-          contents: buildSystemPrompt(lang) + "\n\n" + buildContentPrompt(role, lang),
+          contents: buildSystemPrompt(lang) + "\n\n" + buildContextBlock({ industry, tone, responsibilities, companyName, location, experienceLevel, employmentType, salaryRange, skills }) + "\n\n" + buildContentPrompt(role, lang),
         })
 
         const text = response.text

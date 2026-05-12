@@ -20,12 +20,26 @@ const LANGUAGES = [
   { value: "english", label: "English" },
 ] as const
 
+const EXPERIENCE_LEVELS = [
+  "Junior", "Mid-Level", "Senior", "Lead", "Director", "Executive",
+] as const
+
+const EMPLOYMENT_TYPES = [
+  "Full-Time", "Part-Time", "Contract", "Internship", "Remote", "Hybrid",
+] as const
+
 interface FormData {
   title: string
   industry: string
   tone: string
   responsibilities: string[]
   language: string
+  companyName?: string
+  location?: string
+  experienceLevel?: string
+  employmentType?: string
+  salaryRange?: string
+  skills?: string
 }
 
 interface GenerateFormProps {
@@ -41,6 +55,12 @@ export function GenerateForm({ onGenerate, isGenerating, initialData }: Generate
     tone: initialData?.tone || "Professional",
     responsibilities: initialData?.responsibilities || [""],
     language: initialData?.language || "both",
+    companyName: initialData?.companyName || "",
+    location: initialData?.location || "",
+    experienceLevel: initialData?.experienceLevel || "",
+    employmentType: initialData?.employmentType || "",
+    salaryRange: initialData?.salaryRange || "",
+    skills: initialData?.skills || "",
   })
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
 
@@ -197,6 +217,90 @@ export function GenerateForm({ onGenerate, isGenerating, initialData }: Generate
           </button>
         )}
       </div>
+
+      <details className="rounded-xl border border-[#EAE8FF]">
+        <summary className="cursor-pointer px-4 py-2.5 text-sm font-medium text-[#6b7280] hover:text-[#111827]">
+          Optional details
+        </summary>
+        <div className="space-y-4 border-t border-[#EAE8FF] px-4 py-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#111827]">Company Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Acme Corp"
+                value={form.companyName}
+                onChange={(e) => update("companyName" as keyof FormData, e.target.value)}
+                className="w-full rounded-xl border border-[#EAE8FF] px-4 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] transition-colors focus:border-[#3D2BFF]/40 focus:outline-none focus:ring-2 focus:ring-[#3D2BFF]/10"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#111827]">Location</label>
+              <input
+                type="text"
+                placeholder="e.g. Riyadh, KSA"
+                value={form.location}
+                onChange={(e) => update("location" as keyof FormData, e.target.value)}
+                className="w-full rounded-xl border border-[#EAE8FF] px-4 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] transition-colors focus:border-[#3D2BFF]/40 focus:outline-none focus:ring-2 focus:ring-[#3D2BFF]/10"
+              />
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#111827]">Experience Level</label>
+              <select
+                value={form.experienceLevel}
+                onChange={(e) => update("experienceLevel" as keyof FormData, e.target.value)}
+                className="w-full rounded-xl border border-[#EAE8FF] px-4 py-2.5 text-sm text-[#111827] transition-colors focus:border-[#3D2BFF]/40 focus:outline-none focus:ring-2 focus:ring-[#3D2BFF]/10"
+              >
+                <option value="">Select level</option>
+                {EXPERIENCE_LEVELS.map((l) => (
+                  <option key={l} value={l}>{l}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#111827]">Employment Type</label>
+              <select
+                value={form.employmentType}
+                onChange={(e) => update("employmentType" as keyof FormData, e.target.value)}
+                className="w-full rounded-xl border border-[#EAE8FF] px-4 py-2.5 text-sm text-[#111827] transition-colors focus:border-[#3D2BFF]/40 focus:outline-none focus:ring-2 focus:ring-[#3D2BFF]/10"
+              >
+                <option value="">Select type</option>
+                {EMPLOYMENT_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#111827]">
+                Salary Range <span className="text-xs font-normal text-[#9ca3af]">(optional)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. SAR 15,000 - 20,000 / month"
+                value={form.salaryRange}
+                onChange={(e) => update("salaryRange" as keyof FormData, e.target.value)}
+                className="w-full rounded-xl border border-[#EAE8FF] px-4 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] transition-colors focus:border-[#3D2BFF]/40 focus:outline-none focus:ring-2 focus:ring-[#3D2BFF]/10"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#111827]">
+                Skills <span className="text-xs font-normal text-[#9ca3af]">(comma-separated)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Python, React, Project Management"
+                value={form.skills}
+                onChange={(e) => update("skills" as keyof FormData, e.target.value)}
+                className="w-full rounded-xl border border-[#EAE8FF] px-4 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] transition-colors focus:border-[#3D2BFF]/40 focus:outline-none focus:ring-2 focus:ring-[#3D2BFF]/10"
+              />
+            </div>
+          </div>
+        </div>
+      </details>
 
       <Button
         type="submit"

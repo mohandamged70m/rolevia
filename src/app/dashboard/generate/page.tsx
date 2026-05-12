@@ -11,6 +11,12 @@ interface FormData {
   tone: string
   responsibilities: string[]
   language: string
+  companyName?: string
+  location?: string
+  experienceLevel?: string
+  employmentType?: string
+  salaryRange?: string
+  skills?: string
 }
 
 interface UsageInfo {
@@ -22,6 +28,7 @@ export default function GeneratePage() {
   const router = useRouter()
   const [usage, setUsage] = useState<UsageInfo | null>(null)
   const [output, setOutput] = useState<{ content: string; title: string; language: string } | null>(null)
+  const [lastFormData, setLastFormData] = useState<FormData | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isRegenerating, setIsRegenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -51,11 +58,24 @@ export default function GeneratePage() {
 
     setIsGenerating(true)
     setError(null)
+    setLastFormData(data)
     try {
       const res = await fetch("/api/dashboard/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: data.title, language: data.language }),
+        body: JSON.stringify({
+          role: data.title,
+          language: data.language,
+          industry: data.industry,
+          tone: data.tone,
+          responsibilities: data.responsibilities.filter(Boolean),
+          companyName: data.companyName,
+          location: data.location,
+          experienceLevel: data.experienceLevel,
+          employmentType: data.employmentType,
+          salaryRange: data.salaryRange,
+          skills: data.skills,
+        }),
       })
 
       if (res.status === 403) {
@@ -90,11 +110,24 @@ export default function GeneratePage() {
 
     setIsRegenerating(true)
     setError(null)
+    const fd = lastFormData || { title: output.title, language: output.language, industry: "", tone: "", responsibilities: [] as string[] }
     try {
       const res = await fetch("/api/dashboard/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: output.title, language: output.language }),
+        body: JSON.stringify({
+          role: fd.title,
+          language: fd.language,
+          industry: fd.industry,
+          tone: fd.tone,
+          responsibilities: (fd.responsibilities || []).filter(Boolean),
+          companyName: fd.companyName,
+          location: fd.location,
+          experienceLevel: fd.experienceLevel,
+          employmentType: fd.employmentType,
+          salaryRange: fd.salaryRange,
+          skills: fd.skills,
+        }),
       })
 
       if (res.status === 403) {
@@ -122,7 +155,7 @@ export default function GeneratePage() {
     } finally {
       setIsRegenerating(false)
     }
-  }, [output, isAtLimit, usage])
+  }, [output, isAtLimit, usage, lastFormData])
 
   async function handleSave() {
     if (!output) return
