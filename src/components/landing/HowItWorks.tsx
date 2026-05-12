@@ -7,7 +7,7 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section id="templates" className="bg-[#F8F7FF] px-4 py-24 sm:px-6 lg:px-8">
+    <section id="templates" className="bg-[#F8F7FF] px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="mb-16 grid gap-4 lg:grid-cols-2">
           <div>

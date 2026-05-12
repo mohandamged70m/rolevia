@@ -2,7 +2,7 @@ import Link from "next/link"
 
 export default function CtaSection() {
   return (
-    <section className="relative overflow-hidden bg-[#0D0D1A] px-4 py-24 sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden bg-[#0D0D1A] px-4 py-16 sm:px-6 lg:px-8">
       {/* Radial purple glow */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
         <div className="h-[500px] w-[500px] rounded-full bg-[#3D2BFF] opacity-[0.12] blur-[120px]" />

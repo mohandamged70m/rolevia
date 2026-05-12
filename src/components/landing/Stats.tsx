@@ -7,16 +7,16 @@ const STATS = [
 
 export default function Stats() {
   return (
-    <section className="bg-[#3D2BFF] px-4 py-16 sm:px-6 lg:px-8">
+    <section className="bg-[#3D2BFF] px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {STATS.map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="font-heading text-[52px] font-extrabold leading-none text-white">
+              <p className="font-heading text-[36px] font-extrabold leading-none text-white sm:text-[52px]">
                 {stat.value}
                 {stat.accent && (
                   <span className="text-[#FF5C3A]">
-                    {stat.value === "90%" ? "" : "★"}
+                    ★
                   </span>
                 )}
               </p>

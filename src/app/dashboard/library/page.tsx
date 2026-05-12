@@ -38,7 +38,7 @@ export default async function LibraryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold text-[#111827]">Your Library</h1>
           <p className="mt-1 text-sm text-[#6b7280]">
@@ -47,7 +47,7 @@ export default async function LibraryPage() {
         </div>
         <Link
           href="/dashboard/generate"
-          className="rounded-xl bg-[#3D2BFF] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#3525E0]"
+          className="inline-flex self-start rounded-xl bg-[#3D2BFF] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#3525E0]"
         >
           Generate new
         </Link>

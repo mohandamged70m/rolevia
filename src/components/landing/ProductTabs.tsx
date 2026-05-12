@@ -120,7 +120,7 @@ const TABS = [
       { time: "Done", title: "Published", body: "JD goes live without manual copy-paste or reformatting." },
     ],
     preview: (
-      <div className="grid grid-cols-3 gap-3 rounded-xl border border-[#EAE8FF] bg-white p-5 shadow-sm">
+              <div className="grid grid-cols-2 gap-3 rounded-xl border border-[#EAE8FF] bg-white p-5 shadow-sm sm:grid-cols-3">
         {[
           { name: "Greenhouse", emoji: "🌱" },
           { name: "Workday", emoji: "📅" },
@@ -148,7 +148,7 @@ export default function ProductTabs() {
   const current = TABS.find((t) => t.id === active)!
 
   return (
-    <section id="templates" className="bg-[#F8F7FF] px-4 py-24 sm:px-6 lg:px-8">
+    <section id="templates" className="bg-[#F8F7FF] px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto mb-12 max-w-2xl text-center">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-[#3D2BFF]">

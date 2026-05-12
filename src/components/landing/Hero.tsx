@@ -109,7 +109,7 @@ export default function Hero() {
           Now supporting Arabic & bilingual JDs for MENA markets
         </div>
 
-        <h1 className="font-heading text-[42px] font-extrabold leading-[1.05] tracking-[-2px] text-[#111827] sm:text-[56px] lg:text-[68px]">
+        <h1 className="font-heading text-[36px] font-extrabold leading-[1.05] tracking-[-2px] text-[#111827] sm:text-[56px] lg:text-[68px]">
           Write perfect job descriptions,{" "}
           <em className="not-italic text-[#3D2BFF] underline decoration-[#FF5C3A] decoration-4 underline-offset-8">
             in seconds

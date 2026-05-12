@@ -14,7 +14,7 @@ const config = {
         },
       },
       fontFamily: {
-        arabic: ["var(--font-cairo)", "system-ui", "sans-serif"],
+        heading: ["var(--font-syne)", "system-ui", "sans-serif"],
       },
     },
   },

@@ -148,7 +148,7 @@ export default function GeneratePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold text-[#111827]">Generate JD</h1>
           <p className="mt-1 text-sm text-[#6b7280]">
@@ -156,12 +156,12 @@ export default function GeneratePage() {
           </p>
         </div>
         {usage && (
-          <div className="flex items-center gap-2 rounded-xl border border-[#EAE8FF] bg-white px-3 py-2 text-sm">
-            <span className="text-[#6b7280]">Monthly usage:</span>
+          <div className="flex items-center gap-2 self-start rounded-xl border border-[#EAE8FF] bg-white px-3 py-2 text-sm">
+            <span className="whitespace-nowrap text-[#6b7280]">Monthly usage:</span>
             <span className={`font-semibold ${usage.used >= usage.limit ? "text-[#FF5C3A]" : "text-[#111827]"}`}>
               {usage.used}/{usage.limit}
             </span>
-            <div className="h-2 w-16 overflow-hidden rounded-full bg-[#EAE8FF]">
+            <div className="h-2 w-16 shrink-0 overflow-hidden rounded-full bg-[#EAE8FF]">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${
                   usage.used >= usage.limit ? "bg-[#FF5C3A]" : usage.used / usage.limit >= 0.8 ? "bg-[#FFBD2E]" : "bg-[#3D2BFF]"
