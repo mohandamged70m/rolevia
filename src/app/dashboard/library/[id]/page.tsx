@@ -1,8 +1,8 @@
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
-import { cookies } from "next/headers"
 import Link from "next/link"
 import { isClerkConfigured } from "@/lib/clerk"
+import { getAuthenticatedSupabase } from "@/lib/supabase/server"
 import { JdOutput } from "@/components/app/JdOutput"
 
 interface PageProps {
@@ -17,16 +17,17 @@ interface LibraryEntry {
   created_at: string
 }
 
-async function getEntry(id: string): Promise<LibraryEntry | null> {
+async function getEntry(id: string, userId: string): Promise<LibraryEntry | null> {
   try {
-    const cookieStore = await cookies()
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/library/list`, {
-      headers: { Cookie: cookieStore.toString() },
-      cache: "no-store",
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    return (data.items || []).find((item: LibraryEntry) => item.id === id) || null
+    const supabase = await getAuthenticatedSupabase()
+    if (!supabase) return null
+    const { data } = await supabase
+      .from("jd_library")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", userId)
+      .single()
+    return data
   } catch {
     return null
   }
@@ -39,7 +40,7 @@ export default async function LibraryIdPage({ params }: PageProps) {
   if (!user) redirect("/sign-in")
 
   const { id } = await params
-  const entry = await getEntry(id)
+  const entry = await getEntry(id, user.id)
 
   if (!entry) {
     return (

@@ -1,8 +1,8 @@
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
-import { cookies } from "next/headers"
 import Link from "next/link"
 import { isClerkConfigured } from "@/lib/clerk"
+import { getAuthenticatedSupabase } from "@/lib/supabase/server"
 import { LibraryItem } from "@/components/app/LibraryItem"
 
 interface LibraryEntry {
@@ -13,16 +13,16 @@ interface LibraryEntry {
   content: string
 }
 
-async function getLibrary(): Promise<LibraryEntry[]> {
+async function getLibrary(userId: string): Promise<LibraryEntry[]> {
   try {
-    const cookieStore = await cookies()
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/library/list`, {
-      headers: { Cookie: cookieStore.toString() },
-      cache: "no-store",
-    })
-    if (!res.ok) return []
-    const data = await res.json()
-    return data.items || []
+    const supabase = await getAuthenticatedSupabase()
+    if (!supabase) return []
+    const { data } = await supabase
+      .from("jd_library")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+    return data || []
   } catch {
     return []
   }
@@ -34,7 +34,7 @@ export default async function LibraryPage() {
   const user = await currentUser()
   if (!user) redirect("/sign-in")
 
-  const items = await getLibrary()
+  const items = await getLibrary(user.id)
 
   return (
     <div className="space-y-6">
