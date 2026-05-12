@@ -1,3 +1,5 @@
+import { writeFileSync, mkdirSync } from "fs"
+import { join } from "path"
 import { NextResponse } from "next/server"
 import { currentUser } from "@clerk/nextjs/server"
 import { getAuthenticatedSupabase } from "@/lib/supabase/server"
@@ -15,10 +17,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Title and content are required" }, { status: 400 })
     }
 
-    const supabase = await getAuthenticatedSupabase()
-
     const entryId = id || crypto.randomUUID()
 
+    const supabase = await getAuthenticatedSupabase()
     if (supabase) {
       const { data, error } = await supabase
         .from("jd_library")
@@ -29,18 +30,20 @@ export async function POST(request: Request) {
       if (!error && data) {
         return NextResponse.json({ success: true, id: data.id })
       }
-      console.warn("Supabase save failed, falling back to file system:", error?.message)
+
+      console.warn("Supabase save failed:", error?.message)
     }
 
-    const { writeFileSync, mkdirSync } = await import("fs")
-    const { join } = await import("path")
     const dir = join(process.cwd(), ".data", "library")
     mkdirSync(dir, { recursive: true })
-    const entry = { id: entryId, user_id: user.id, title, content, language, created_at: new Date().toISOString() }
-    writeFileSync(join(dir, `${entryId}.json`), JSON.stringify(entry, null, 2))
+    writeFileSync(
+      join(dir, `${entryId}.json`),
+      JSON.stringify({ id: entryId, user_id: user.id, title, content, language, created_at: new Date().toISOString() }, null, 2),
+    )
     return NextResponse.json({ success: true, id: entryId })
   } catch (error) {
     console.error("Library save error:", error)
-    return NextResponse.json({ error: "Failed to save" }, { status: 500 })
+    const message = error instanceof Error ? error.message : "Failed to save"
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

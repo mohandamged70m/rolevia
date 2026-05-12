@@ -1,3 +1,5 @@
+import { existsSync, unlinkSync } from "fs"
+import { join } from "path"
 import { NextRequest, NextResponse } from "next/server"
 import { currentUser } from "@clerk/nextjs/server"
 import { getAuthenticatedSupabase } from "@/lib/supabase/server"
@@ -23,15 +25,12 @@ export async function DELETE(request: NextRequest) {
         .eq("id", id)
         .eq("user_id", user.id)
 
-      if (error) {
-        console.warn("Supabase delete failed, falling back to file system:", error.message)
-      } else {
+      if (!error) {
         return NextResponse.json({ success: true })
       }
+      console.warn("Supabase delete failed:", error.message)
     }
 
-    const { unlinkSync, existsSync } = await import("fs")
-    const { join } = await import("path")
     const filePath = join(process.cwd(), ".data", "library", `${id}.json`)
     if (existsSync(filePath)) {
       unlinkSync(filePath)
@@ -39,6 +38,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Library delete error:", error)
-    return NextResponse.json({ error: "Failed to delete" }, { status: 500 })
+    const message = error instanceof Error ? error.message : "Failed to delete"
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

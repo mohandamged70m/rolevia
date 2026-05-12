@@ -171,7 +171,7 @@ export default function GeneratePage() {
         const err = await res.json().catch(() => ({}))
         throw new Error(err.error || "Failed to save")
       }
-      router.push("/dashboard/library")
+      window.location.href = "/dashboard/library"
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save")
     } finally {

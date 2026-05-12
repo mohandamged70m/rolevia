@@ -1,3 +1,5 @@
+import { readdirSync, existsSync, readFileSync } from "fs"
+import { join } from "path"
 import { NextResponse } from "next/server"
 import { currentUser } from "@clerk/nextjs/server"
 import { getAuthenticatedSupabase } from "@/lib/supabase/server"
@@ -23,13 +25,11 @@ export async function GET() {
       if (!error && data) {
         items = data
       } else {
-        console.warn("Supabase list failed, falling back to file system:", error?.message)
+        console.warn("Supabase list failed:", error?.message)
       }
     }
 
     if (items.length === 0 || !supabase) {
-      const { readdirSync, existsSync, readFileSync } = await import("fs")
-      const { join } = await import("path")
       const dir = join(process.cwd(), ".data", "library")
       if (existsSync(dir)) {
         const files = readdirSync(dir)
@@ -46,6 +46,7 @@ export async function GET() {
     return NextResponse.json({ items, total: items.length })
   } catch (error) {
     console.error("Library list error:", error)
-    return NextResponse.json({ error: "Failed to list" }, { status: 500 })
+    const message = error instanceof Error ? error.message : "Failed to list"
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
